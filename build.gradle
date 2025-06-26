@@ -1,8 +1,10 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+    id 'org.jetbrains.kotlin.jvm' version '2.1.+'
     id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
     id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.jetbrains.kotlin.kapt' version '2.2.0'
+    id 'org.domaframework.doma.compile' version '4.0.0'
 }
 
 group = 'com.ywcheong.simple'
@@ -36,7 +38,15 @@ dependencies {
     implementation 'io.github.oshai:kotlin-logging-jvm:7.0.3'           // kotlin logger, for easy logging
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin' // kotlin logger, for easy logging
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9' // SpringDoc, for documentation
+
+    // DBMS (MySQL) Connection
     runtimeOnly 'com.mysql:mysql-connector-j'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    // DBMS Interface: DOMA support
+    implementation 'org.seasar.doma:doma-kotlin:3.7.0'
+    implementation 'org.seasar.doma.boot:doma-spring-boot-starter:2.4.0'
+    kapt 'org.seasar.doma:doma-processor:3.7.0'
 
     // Development
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -63,6 +73,6 @@ tasks.register('dockerMount', Copy) {
     description = 'Copies the standalone JAR to docker/lib/server.jar'
     dependsOn bootJar
     from { bootJar.archiveFile.get().asFile }
-    into "$projectDir/build"
+    into '$projectDir/build'
     rename { 'server.jar' }
 }
