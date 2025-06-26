@@ -1,0 +1,16 @@
+services:
+  st-server:
+    container_name: st-server-spring
+    build:
+      context: ../
+      dockerfile: docker/server.prod.dockerfile
+#    depends_on:
+#      st-infra-init:
+#        condition: service_completed_successfully
+    ports:
+      - "80:8080"
+    networks:
+      - st-bridge
+    entrypoint: [ "java",
+                  "-javaagent:/app/opentelemetry-javaagent.jar",
+                  "-jar", "/app/server.jar" ]
