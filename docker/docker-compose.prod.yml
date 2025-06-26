@@ -1,12 +1,17 @@
 services:
+  st-dbms:
+    ports: !reset [] # 포트 외부 노출 삭제
+    expose:
+      - "3306" # 내부 네트워크에만 포트 노출
+
   st-server:
     container_name: st-server-spring
     build:
       context: ../
       dockerfile: docker/server.prod.dockerfile
-#    depends_on:
-#      st-infra-init:
-#        condition: service_completed_successfully
+    depends_on:
+      st-init:
+        condition: service_completed_successfully
     ports:
       - "80:8080"
     networks:

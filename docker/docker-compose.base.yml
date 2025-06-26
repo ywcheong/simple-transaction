@@ -1,3 +1,38 @@
 networks:
   st-bridge:
     driver: bridge
+
+services:
+  st-dbms:
+    image: mysql:8.0
+    container_name: st-dbms-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: stdb
+      MYSQL_USER: stserver
+      MYSQL_PASSWORD_FILE: /run/secrets/app_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/root_password
+    volumes:
+      - ./volume/dbms-mysql:/var/lib/mysql
+    secrets:
+      - root_password
+      - app_password
+    ports:
+      - "3306:3306"
+    networks:
+      - st-bridge
+
+  st-init:
+    image: alpine
+    container_name: st-infra-init
+    entrypoint: [ "ls" ] # Nothing to do right now
+    depends_on:
+      - st-dbms
+    networks:
+      - st-bridge
+
+secrets:
+  root_password:
+    file: ../secret/mysql.root.secret.txt
+  app_password:
+    file: ../secret/mysql.app.secret.txt
