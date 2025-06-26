@@ -1,0 +1,68 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.ywcheong.simple'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Annotation Processor
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // Implementation + Runtime
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'io.github.oshai:kotlin-logging-jvm:7.0.3'           // kotlin logger, for easy logging
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin' // kotlin logger, for easy logging
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9' // SpringDoc, for documentation
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // Development
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Test Implementation + Runtime
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll '-Xjsr305=strict'
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.register('dockerMount', Copy) {
+    group = 'build'
+    description = 'Copies the standalone JAR to docker/lib/server.jar'
+    dependsOn bootJar
+    from { bootJar.archiveFile.get().asFile }
+    into "$projectDir/build"
+    rename { 'server.jar' }
+}
