@@ -32,7 +32,9 @@ services:
       - st-bridge
 
 secrets:
-  root_password:
-    file: ../secret/mysql.root.secret.txt
-  app_password:
-    file: ../secret/mysql.app.secret.txt
+  secret_mysql_root_password:
+    file: ../secret/secret_mysql_root_password
+  secret_mysql_app_password:
+    file: ../secret/secret_mysql_app_password
+  secret_server_hash_key:
+    file: ../secret/secret_server_hash_key

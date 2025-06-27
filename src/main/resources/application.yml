@@ -1,3 +1,10 @@
 spring:
   application:
     name: simple-transaction
+  config:
+    import: configtree:${SECRET_PATH}
+  datasource:
+    url: ${DATASOURCE_URL}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: stserver
+    password: ${secret_mysql_app_password}
