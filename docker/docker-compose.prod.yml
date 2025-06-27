@@ -12,6 +12,11 @@ services:
     depends_on:
       st-init:
         condition: service_completed_successfully
+    env_file:
+      - ../env/server.prod.env
+    secrets:
+      - secret_mysql_app_password
+      - secret_server_hash_key
     ports:
       - "80:8080"
     networks:

@@ -10,13 +10,13 @@ services:
     environment:
       MYSQL_DATABASE: stdb
       MYSQL_USER: stserver
-      MYSQL_PASSWORD_FILE: /run/secrets/app_password
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/secret_mysql_app_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/secret_mysql_root_password
     volumes:
       - ./volume/dbms-mysql:/var/lib/mysql
     secrets:
-      - root_password
-      - app_password
+      - secret_mysql_root_password
+      - secret_mysql_app_password
     ports:
       - "3306:3306"
     networks:
