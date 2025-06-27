@@ -13,13 +13,21 @@ case "$1" in
   prod)
     COMPOSE_FILE_OPTION=$PROD_COMPOSE_OPTION
     ;;
-  clean)
-    echo "Cleaning Gradle build files..."
+  gradle-clean)
+    echo "Cleaning gradle..."
     ./gradlew clean
     ./gradlew --stop
-    echo "Wiping docker volumes..."
+    exit 0
+    ;;
+  docker-clean)
+    echo "Cleaning docker volumes..."
     docker compose $DEV_COMPOSE_OPTION down -v
     docker compose $PROD_COMPOSE_OPTION down -v
+    exit 0
+    ;;
+  clean)
+    $0 gradle-clean
+    $0 docker-clean
     exit 0
     ;;
   *)
