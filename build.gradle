@@ -40,6 +40,11 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin' // kotlin logger, for easy logging
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9' // SpringDoc, for documentation
 
+    // JJwt Support
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
     // DBMS (MySQL) Connection
     runtimeOnly 'com.mysql:mysql-connector-j'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
