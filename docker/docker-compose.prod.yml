@@ -12,6 +12,10 @@ services:
     depends_on:
       st-init:
         condition: service_completed_successfully
+    secrets:
+      - secret_mysql_app_password
+      - secret_server_jwt_pubkey
+      - secret_server_jwt_prvkey
     ports:
       - "80:8080"
     networks:

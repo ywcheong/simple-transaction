@@ -36,5 +36,7 @@ secrets:
     file: ../secret/secret_mysql_root_password
   secret_mysql_app_password:
     file: ../secret/secret_mysql_app_password
-  secret_server_hash_key:
-    file: ../secret/secret_server_hash_key
+  secret_server_jwt_pubkey:
+    file: ../secret/secret_server_jwt_pubkey
+  secret_server_jwt_prvkey:
+    file: ../secret/secret_server_jwt_prvkey
