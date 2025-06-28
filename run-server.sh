@@ -3,19 +3,31 @@
 BASE_COMPOSE_FILE="./docker/docker-compose.base.yml"
 PROD_COMPOSE_FILE="./docker/docker-compose.prod.yml"
 
+DEV_COMPOSE_OPTION="-f $BASE_COMPOSE_FILE"
+PROD_COMPOSE_OPTION="-f $BASE_COMPOSE_FILE -f $PROD_COMPOSE_FILE"
+
 case "$1" in
   dev)
-    COMPOSE_FILE_OPTION="-f $BASE_COMPOSE_FILE"
+    COMPOSE_FILE_OPTION=$DEV_COMPOSE_OPTION
     ;;
   prod)
-    COMPOSE_FILE_OPTION="-f $BASE_COMPOSE_FILE -f $PROD_COMPOSE_FILE"
+    COMPOSE_FILE_OPTION=$PROD_COMPOSE_OPTION
     ;;
-  clean)
-    echo "Cleaning Gradle build files..."
+  gradle-clean)
+    echo "Cleaning gradle..."
     ./gradlew clean
     ./gradlew --stop
-    echo "Wiping docker volume files..."
-    rm -rf ./docker/volume
+    exit 0
+    ;;
+  docker-clean)
+    echo "Cleaning docker volumes..."
+    docker compose $DEV_COMPOSE_OPTION down -v
+    docker compose $PROD_COMPOSE_OPTION down -v
+    exit 0
+    ;;
+  clean)
+    $0 gradle-clean
+    $0 docker-clean
     exit 0
     ;;
   *)
