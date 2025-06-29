@@ -23,17 +23,40 @@ services:
     networks:
       - st-bridge
 
+  st-obs:
+    image: grafana/otel-lgtm:latest
+    container_name: st-obs-otel-lgtm
+    volumes:
+      - grafana_data:/data/grafana
+      - prometheus_data:/data/prometheus
+      - loki_data:/data/loki
+    env_file:
+      - ../env/obs.base.env
+    ports:
+      - "4317:4317" # OpenTelemetry gRPC
+      - "4318:4318" # OpenTelemetry HTTP
+      - "3000:3000" # Web dashboard
+    networks:
+      - st-bridge
+
   st-init:
     image: alpine
     container_name: st-infra-init
     entrypoint: [ "ls" ] # Nothing to do right now
     depends_on:
       - st-dbms
+      - st-obs
     networks:
       - st-bridge
 
 volumes:
   mysql_data:
+    driver: local
+  grafana_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  loki_data:
     driver: local
 
 secrets:

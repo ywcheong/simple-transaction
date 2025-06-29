@@ -3,6 +3,11 @@ services:
     ports: !reset [] # 포트 외부 노출 삭제
     expose:
       - "3306" # 내부 네트워크에만 포트 노출
+  st-obs:
+    ports: !reset ["3000:3000"] # Grafana 대시보드만 노출
+    expose:
+      - 4317 # OpenTelemetry gRPC
+      - 4318 # OpenTelemetry HTTP
 
   st-server:
     container_name: st-server-spring
