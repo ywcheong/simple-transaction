@@ -8,3 +8,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: stserver
     password: ${secret_mysql_app_password}
+st:
+  secret:
+    jwt-pubkey: ${secret_server_jwt_pubkey}
+    jwt-prvkey: ${secret_server_jwt_prvkey}
+
+springdoc:
+  api-docs:
+    path: /help/docs
+  swagger-ui:
+    path: /help/ui
