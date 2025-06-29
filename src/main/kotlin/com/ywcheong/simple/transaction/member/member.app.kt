@@ -1,12 +1,13 @@
 package com.ywcheong.simple.transaction.member
 
+import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
+import com.ywcheong.simple.transaction.security.jwt.JwtService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -26,9 +27,16 @@ data class MemberResponseDto (
     constructor(member: Member) : this(member.id.value)
 }
 
+data class JwtRequestDto (
+    val name: String,
+    val password: String
+)
+
 @RestController
 @RequestMapping("/members")
-class MemberController(private val memberService: MemberService) {
+class MemberController(
+    private val memberService: MemberService
+) {
     @PostMapping
     fun register(@RequestBody requestDto: MemberRegisterRequestDto): ResponseEntity<MemberResponseDto?> {
         with(requestDto) {
@@ -50,9 +58,11 @@ class MemberController(private val memberService: MemberService) {
         return result
     }
 
-    @GetMapping("/{id}/tokens")
-    fun jwt(@PathVariable id: String) {
-        TODO()
+    @PostMapping("/tokens")
+    fun tokens(@RequestBody jwtRequest: JwtRequestDto): String? {
+        val memberName = MemberName(jwtRequest.name)
+        val memberPassword = MemberPlainPassword(jwtRequest.password)
+        return memberService.publishJwt(memberName, memberPassword)
     }
 }
 
@@ -60,13 +70,14 @@ interface MemberService {
     fun register(name: MemberName, phone: MemberPhone, plainPassword: MemberPlainPassword): Member?
     fun withdraw(id: MemberId): Boolean
     fun findUser(id: MemberId): Member?
-    fun publishJwt(id: MemberId): String?
+    fun publishJwt(name: MemberName, password: MemberPlainPassword): String?
 }
 
 @Service
 class DefaultMemberService (
+    private val jwtService: JwtService,
     private val memberRepository: MemberRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
 ) : MemberService {
     override fun register(name: MemberName, phone: MemberPhone, plainPassword: MemberPlainPassword): Member? {
         // Domain 오브젝트 생성
@@ -88,14 +99,20 @@ class DefaultMemberService (
 
     override fun findUser(id: MemberId): Member? = memberRepository.selectById(id)
 
-    override fun publishJwt(id: MemberId): String? {
-        TODO("need implement")
+    override fun publishJwt(name: MemberName, password: MemberPlainPassword): String? {
+        val member = memberRepository.selectByName(name) ?: return "user not found"
+        if (!passwordEncoder.matches(password.value, member.password.value)) {
+            return "password not match"
+        }
+
+        return jwtService.sign(JwtPayloadDto(member.id.value, member.name.value, "user"))
     }
 
 }
 
 interface MemberRepository {
     fun selectById(memberId: MemberId): Member?
+    fun selectByName(memberName: MemberName): Member?
     fun insert(member: Member): Boolean
     fun delete(memberId: MemberId): Boolean
 }
@@ -105,6 +122,8 @@ class DefaultMemberRepository (
     private val memberDao: MemberDao
 ) : MemberRepository {
     override fun selectById(memberId: MemberId): Member? = memberDao.findById(memberId.value)?.toMember()
+
+    override fun selectByName(memberName: MemberName): Member? = memberDao.findByName(memberName.value)?.toMember()
 
     override fun insert(member: Member): Boolean {
         val memberInsertEntity = MemberEntity(member)

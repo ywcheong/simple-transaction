@@ -63,6 +63,17 @@ interface MemberDao {
     @Select
     fun findById(id: String): MemberEntity?
 
+    @Sql("""
+        SELECT
+            *
+        FROM
+            Member
+        WHERE
+            name = /* name */'x'
+    """)
+    @Select
+    fun findByName(name: String): MemberEntity?
+
     @Insert
     fun insert(member: MemberEntity): Int
 
