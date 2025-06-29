@@ -84,6 +84,6 @@ tasks.register('dockerMount', Copy) {
     description = 'Copies the standalone JAR to docker/lib/server.jar'
     dependsOn bootJar
     from { bootJar.archiveFile.get().asFile }
-    into '$projectDir/build'
+    into file("build")
     rename { 'server.jar' }
 }
