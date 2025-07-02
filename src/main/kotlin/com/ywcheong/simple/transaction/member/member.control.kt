@@ -5,7 +5,6 @@ import com.ywcheong.simple.transaction.exception.check_domain
 import com.ywcheong.simple.transaction.exception.logger_
 import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
 import com.ywcheong.simple.transaction.security.jwt.JwtService
-import org.seasar.doma.jdbc.UniqueConstraintException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
