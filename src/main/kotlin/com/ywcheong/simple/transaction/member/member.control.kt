@@ -1,100 +1,98 @@
 package com.ywcheong.simple.transaction.member
 
+import com.ywcheong.simple.transaction.exception.UserFaultException
+import com.ywcheong.simple.transaction.exception.check_domain
+import com.ywcheong.simple.transaction.exception.logger_
+import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
+import com.ywcheong.simple.transaction.security.jwt.JwtService
+import org.seasar.doma.jdbc.UniqueConstraintException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 
-data class MemberRegisterRequestDto(
-    val name: String, val password: String, val phone: String
-)
+data class RegisterRequest(val id: String, val name: String, val password: String, val phone: String)
+data class RegisterResponse(val id: String)
 
-data class MemberRegisterResponseDto(
-    val id: String
-)
+data class WithdrawResponse(val id: String)
 
-//data class MemberWithdrawRequestDto()
-
-data class MemberWithdrawResponseDto(
-    val success: Boolean = true
-)
-
-data class MemberTokenRequestDto(
-    val name: String, val password: String
-)
-
-data class MemberTokenResponseDto(val token: String)
+data class TokenRequest(val id: String, val password: String)
+data class TokenResponse(val token: String)
 
 @RestController
 @RequestMapping("/members")
 class MemberController(
-    private val memberService: MemberService
+    private val memberPasswordHashService: MemberPasswordHashService,
+    private val memberDao: MemberDao,
+    private val jwtService: JwtService
 ) {
     @PostMapping
-    fun register(@RequestBody registerDto: MemberRegisterRequestDto): ResponseEntity<MemberRegisterResponseDto> =
-        with(registerDto) {
-            // 서비스 요청 준비
-            val memberName = MemberName(name)
-            val memberPlainPassword = MemberPlainPassword(password)
-            val memberPhone = MemberPhone(phone)
+    fun registerNewMember(@RequestBody request: RegisterRequest): ResponseEntity<RegisterResponse> = with(request) {
+        // 요청 준비
+        val memberId = MemberId(id)
+        val memberName = MemberName(name)
+        val memberPlainPassword = MemberPlainPassword(password)
+        val memberPhone = MemberPhone(phone)
+        val memberStatus = MemberStatus.MEMBER_REGISTERED
 
-            // 서비스 요청 호출
-            val registeredMember: Member = memberService.register(
-                memberName = memberName,
-                memberPhone = memberPhone,
-                memberPlainPassword = memberPlainPassword,
-            )
-
-            // 서비스 응답 준비
-            val responseDto = MemberRegisterResponseDto(
-                id = registeredMember.id.value
-            )
-
-            // 서비스 응답 반환
-            ResponseEntity.status(HttpStatus.OK).body(responseDto)
+        // 의존성 조율
+        val memberHashedPassword = memberPasswordHashService.encode(memberPlainPassword)
+        val member = Member(
+            id = memberId,
+            name = memberName,
+            phone = memberPhone,
+            password = memberHashedPassword,
+            status = memberStatus
+        )
+        try {
+            val memberEntity = MemberEntity(member)
+            val insertCount = memberDao.insert(memberEntity)
+            check(insertCount == 1) { "회원 DB에 삽입이 정상적으로 완료되지 않았습니다. (삽입 카운트: $insertCount)" }
+        } catch (ex: UniqueConstraintException) {
+            throw UserFaultException("이미 존재하는 회원 ID입니다.")
         }
+
+        // 응답 반환
+        ResponseEntity.status(HttpStatus.OK).body(RegisterResponse(memberId.value))
+    }
 
     @DeleteMapping
-    fun withdraw(): ResponseEntity<MemberWithdrawResponseDto> {
-        // 서비스 요청 준비
-        val auth = SecurityContextHolder.getContext().authentication
-        if (auth == null || !auth.isAuthenticated) {
-            throw AuthenticationCredentialsNotFoundException("인증 정보가 없습니다.")
-        }
+    fun withdrawExistingMember(): ResponseEntity<WithdrawResponse> {
+        // 요청 준비
+        val id = SecurityContextHolder.getContext().authentication.principal as String
+        logger_.info { "Context ID: $id" }
+        val memberId = MemberId(id)
 
-        val memberId = MemberId(auth.principal as String)
+        // 의존성 조율
+        val deleteCount = memberDao.delete(memberId)
+        check_domain(deleteCount == 1) { "이미 삭제된 회원입니다." }
 
-        // 서비스 요청 호출
-        memberService.withdraw(
-            memberId = memberId
-        )
-
-        // 서비스 응답 준비
-        val responseDto = MemberWithdrawResponseDto()
-
-        // 서비스 응답 반환
+        // 응답 반환
+        val responseDto = WithdrawResponse(memberId.value)
         return ResponseEntity.status(HttpStatus.OK).body(responseDto)
     }
 
     @PostMapping("/tokens")
-    fun tokens(@RequestBody requestDto: MemberTokenRequestDto): ResponseEntity<MemberTokenResponseDto> =
-        with(requestDto) {
-            // 서비스 요청 준비
-            val memberName = MemberName(name)
-            val memberPlainPassword = MemberPlainPassword(password)
+    fun publishAuthToken(@RequestBody request: TokenRequest): ResponseEntity<TokenResponse> = with(request) {
+        // 요청 준비
+        val memberId = MemberId(id)
+        val claimedPlainPassword = MemberPlainPassword(password)
 
-            // 서비스 요청 호출
-            val tokenString: String = memberService.publishToken(
-                memberName = memberName, memberPlainPassword = memberPlainPassword
+        // 의존성 조율
+        val member = memberDao.findById(memberId)?.toMember() ?: throw UserFaultException("존재하지 않는 회원입니다.")
+        val storedHashedPassword = member.password
+        if (!memberPasswordHashService.isEqual(
+                claimedPlainPassword,
+                storedHashedPassword
             )
-
-            // 서비스 응답 준비
-            val responseDto = MemberTokenResponseDto(
-                token = tokenString
+        ) throw UserFaultException("비밀번호가 일치하지 않습니다.")
+        val jwtToken = jwtService.sign(
+            JwtPayloadDto(
+                sub = member.id.value, name = member.name.value, role = "ROLE_USER"
             )
+        )
 
-            // 서비스 응답 반화
-            ResponseEntity.status(HttpStatus.OK).body(responseDto)
-        }
+        // 응답 반환
+        ResponseEntity.status(HttpStatus.OK).body(TokenResponse(jwtToken))
+    }
 }

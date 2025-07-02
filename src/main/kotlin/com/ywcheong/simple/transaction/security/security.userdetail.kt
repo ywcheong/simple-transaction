@@ -1,8 +1,8 @@
 package com.ywcheong.simple.transaction.security
 
 import com.ywcheong.simple.transaction.member.Member
+import com.ywcheong.simple.transaction.member.MemberDao
 import com.ywcheong.simple.transaction.member.MemberId
-import com.ywcheong.simple.transaction.member.MemberRepository
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
@@ -22,12 +22,12 @@ class CustomUserDetails(val member: Member) : UserDetails {
 
 @Service
 class CustomUserDetailsService(
-    private val memberRepository: MemberRepository
+    private val memberDao: MemberDao
 ) : UserDetailsService {
     override fun loadUserByUsername(username: String?): UserDetails {
-        if (username == null) throw UsernameNotFoundException("사용자 이름이 비었습니다.")
+        if (username == null) throw UsernameNotFoundException("회원 ID가 비었습니다.")
         val member =
-            memberRepository.selectById(MemberId(username)) ?: throw UsernameNotFoundException("사용자 이름을 찾을 수 없습니다.")
+            memberDao.findById(MemberId(username))?.toMember() ?: throw UsernameNotFoundException("회원 ID를 찾을 수 없습니다.")
         return CustomUserDetails(member)
     }
 }

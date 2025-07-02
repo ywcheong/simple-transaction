@@ -29,14 +29,13 @@ class MemberEntity (
         status = member.status.value
     )
 
+    override fun toString(): String {
+        return "MemberEntity[id=$id,name=$name,phone=$phone,password=MASKED,status=$status]"
+    }
+
     fun toMember(): Member {
         require(id != null && name != null && phone != null && password != null && status != null) {
-            "Member의 필드가 Not-null임에도, 데이터베이스에서 Null인 열을 조회했습니다. (값=${this.toString()})"
-        }
-
-        val memberStatus = MemberStatus.fromValue(status!!)
-        require(memberStatus != null) {
-            "데이터베이스에서 검색된 Member의 status의 값이 정상 범위를 이탈했습니다. (값=${this.toString()})"
+            "MemberEntity에 Null 값이 있으므로 Member로 변환할 수 없습니다. (${this.toString()})"
         }
 
         return Member(
@@ -44,7 +43,7 @@ class MemberEntity (
             name = MemberName(name!!),
             phone = MemberPhone(phone!!),
             password = MemberHashedPassword(password!!),
-            status = memberStatus,
+            status = MemberStatus(status!!),
         )
     }
 }
@@ -58,10 +57,10 @@ interface MemberDao {
         FROM
             Member
         WHERE
-            id = /* id */'00000000-0000-0000-0000-000000000000'
+            id = /* memberId.value */'00000000-0000-0000-0000-000000000000'
     """)
     @Select
-    fun findById(id: String): MemberEntity?
+    fun findById(memberId: MemberId): MemberEntity?
 
     @Sql("""
         SELECT
@@ -69,24 +68,24 @@ interface MemberDao {
         FROM
             Member
         WHERE
-            name = /* name */'x'
+            name = /* memberName.value */'x'
     """)
     @Select
-    fun findByName(name: String): MemberEntity?
+    fun findByName(memberName: MemberName): MemberEntity?
 
     @Insert
-    fun insert(member: MemberEntity): Int
+    fun insert(memberEntity: MemberEntity): Int
 
     @Update
-    fun update(member: MemberEntity): Int
+    fun update(memberEntity: MemberEntity): Int
 
     @Sql("""
         DELETE
         FROM
             Member
         WHERE
-            id = /* id */'00000000-0000-0000-0000-000000000000'
+            id = /* memberId.value */'00000000-0000-0000-0000-000000000000'
     """)
     @Delete
-    fun delete(id: String): Int
+    fun delete(memberId: MemberId): Int
 }

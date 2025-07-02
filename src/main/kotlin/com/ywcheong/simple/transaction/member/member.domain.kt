@@ -63,10 +63,11 @@ interface MemberPasswordHashService {
 // DB 매핑으로 불가피하게 Enum 사용 불가
 data class MemberStatus(val value: Int) {
     init {
-        check(value == MEMBER_WITHDREW.value || value == MEMBER_REGISTERED.value) { "회원 상태의 값이 잘못되었습니다. (현재 값 = $value)" }
+        check(value in ALLOWED_VALUES) { "회원 상태의 값이 잘못되었습니다. (현재 값 = $value)" }
     }
 
     companion object {
+        private val ALLOWED_VALUES = setOf(0, 1)
         val MEMBER_WITHDREW = MemberStatus(0)
         val MEMBER_REGISTERED = MemberStatus(1)
     }
