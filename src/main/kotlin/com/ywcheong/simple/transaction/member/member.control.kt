@@ -6,6 +6,7 @@ import com.ywcheong.simple.transaction.exception.logger_
 import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
 import com.ywcheong.simple.transaction.security.jwt.JwtService
 import org.seasar.doma.jdbc.UniqueConstraintException
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
@@ -48,7 +49,7 @@ class MemberController(
             val memberEntity = MemberEntity(member)
             val insertCount = memberDao.insert(memberEntity)
             check(insertCount == 1) { "회원 DB에 삽입이 정상적으로 완료되지 않았습니다. (삽입 카운트: $insertCount)" }
-        } catch (ex: UniqueConstraintException) {
+        } catch (ex: DuplicateKeyException) {
             throw UserFaultException("이미 존재하는 회원 ID입니다.")
         }
 
@@ -82,8 +83,7 @@ class MemberController(
         val member = memberDao.findById(memberId)?.toMember() ?: throw UserFaultException("존재하지 않는 회원입니다.")
         val storedHashedPassword = member.password
         if (!memberPasswordHashService.isEqual(
-                claimedPlainPassword,
-                storedHashedPassword
+                claimedPlainPassword, storedHashedPassword
             )
         ) throw UserFaultException("비밀번호가 일치하지 않습니다.")
         val jwtToken = jwtService.sign(
