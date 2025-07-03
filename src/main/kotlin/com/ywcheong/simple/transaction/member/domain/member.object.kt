@@ -1,11 +1,9 @@
 package com.ywcheong.simple.transaction.member.domain
 
-import com.ywcheong.simple.transaction.exception.check_domain
-
 data class MemberId(val value: String) {
     init {
-        check_domain(value.length in MIN_LENGTH..MAX_LENGTH) { "회원 ID는 ${MIN_LENGTH}자 이상 ${MAX_LENGTH}자 이하여야 합니다." }
-        check_domain(value.matches(FORMAT_RULE)) { "회원 ID는 알파벳 소문자와 숫자로만 이루어져야 합니다." }
+        if (value.length !in MIN_LENGTH..MAX_LENGTH) throw InvalidMemberIdException("회원 ID는 ${MIN_LENGTH}자 이상 ${MAX_LENGTH}자 이하여야 합니다.")
+        if (!value.matches(FORMAT_RULE)) throw InvalidMemberIdException("회원 ID는 알파벳 소문자와 숫자로만 이루어져야 합니다.")
     }
 
     companion object {
@@ -18,7 +16,7 @@ data class MemberId(val value: String) {
 @JvmInline
 value class MemberName(val value: String) {
     init {
-        check_domain(value.length in MIN_LENGTH..MAX_LENGTH) { "회원 이름은 ${MIN_LENGTH}자 이상 ${MAX_LENGTH}자 이하여야 합니다." }
+        if (value.length !in MIN_LENGTH..MAX_LENGTH) throw InvalidMemberNameException("회원 이름은 ${MIN_LENGTH}자 이상 ${MAX_LENGTH}자 이하여야 합니다.")
     }
 
     companion object {
@@ -29,7 +27,7 @@ value class MemberName(val value: String) {
 
 data class MemberPhone(val value: String) {
     init {
-        check_domain(value.matches(FORMAT_RULE)) { "회원 전화번호 양식은 +국가코드-번호-번호-번호 꼴이어야 합니다." }
+        if (!value.matches(FORMAT_RULE)) throw InvalidMemberPhoneException("회원 전화번호 양식은 +국가코드-번호-번호-번호 꼴이어야 합니다.")
     }
 
     companion object {
@@ -39,8 +37,8 @@ data class MemberPhone(val value: String) {
 
 data class MemberPlainPassword(val value: String) {
     init {
-        check_domain(value.length in MIN_LENGTH..MAX_LENGTH) { "회원 비밀번호는 ${MIN_LENGTH}자 이상 ${MAX_LENGTH}자 이하여야 합니다." }
-        check_domain(value.matches(FORMAT_RULE)) { "회원 비밀번호는 알파벳 대소문자와 숫자, 그리고 !@#\\\$%^&*만 사용할 수 있습니다." }
+        if (value.length !in MIN_LENGTH..MAX_LENGTH) throw InvalidMemberPasswordException("회원 비밀번호는 ${MIN_LENGTH}자 이상 ${MAX_LENGTH}자 이하여야 합니다.")
+        if (!value.matches(FORMAT_RULE)) throw InvalidMemberPasswordException("회원 비밀번호는 알파벳 대소문자와 숫자, 그리고 !@#\\\$%^&*만 사용할 수 있습니다.")
     }
 
     override fun toString(): String = "MemberPlainPassword[value=MASKED]"
@@ -52,7 +50,7 @@ data class MemberPlainPassword(val value: String) {
     }
 }
 
-data class MemberHashedPassword (val value: String) {
+data class MemberHashedPassword(val value: String) {
     override fun toString(): String = "MemberHashedPassword[value=MASKED]"
 }
 
