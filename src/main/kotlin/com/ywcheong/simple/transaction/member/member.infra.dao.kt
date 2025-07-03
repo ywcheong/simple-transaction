@@ -57,21 +57,10 @@ interface MemberDao {
         FROM
             member
         WHERE
-            id = /* memberId.value */'00000000-0000-0000-0000-000000000000'
+            id = /* id */'00000000-0000-0000-0000-000000000000'
     """)
     @Select
-    fun findById(memberId: MemberId): MemberEntity?
-
-    @Sql("""
-        SELECT
-            *
-        FROM
-            member
-        WHERE
-            name = /* memberName.value */'x'
-    """)
-    @Select
-    fun findByName(memberName: MemberName): MemberEntity?
+    fun findById(id: String): MemberEntity?
 
     @Insert
     fun insert(memberEntity: MemberEntity): Int
@@ -84,8 +73,8 @@ interface MemberDao {
         FROM
             member
         WHERE
-            id = /* memberId.value */'00000000-0000-0000-0000-000000000000'
+            id = /* id */'00000000-0000-0000-0000-000000000000'
     """)
     @Delete
-    fun delete(memberId: MemberId): Int
+    fun delete(id: String): Int
 }

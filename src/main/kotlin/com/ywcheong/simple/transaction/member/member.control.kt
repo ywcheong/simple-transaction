@@ -64,7 +64,7 @@ class MemberController(
         val memberId = MemberId(id)
 
         // 의존성 조율
-        val deleteCount = memberDao.delete(memberId)
+        val deleteCount = memberDao.delete(memberId.value)
         check_domain(deleteCount == 1) { "이미 삭제된 회원입니다." }
 
         // 응답 반환
@@ -79,7 +79,7 @@ class MemberController(
         val claimedPlainPassword = MemberPlainPassword(password)
 
         // 의존성 조율
-        val member = memberDao.findById(memberId)?.toMember() ?: throw UserFaultException("존재하지 않는 회원입니다.")
+        val member = memberDao.findById(memberId.value)?.toMember() ?: throw UserFaultException("존재하지 않는 회원입니다.")
         val storedHashedPassword = member.password
         if (!memberPasswordHashService.isEqual(
                 claimedPlainPassword, storedHashedPassword

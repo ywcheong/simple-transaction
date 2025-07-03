@@ -15,7 +15,8 @@ data class MemberId(val value: String) {
     }
 }
 
-data class MemberName(val value: String) {
+@JvmInline
+value class MemberName(val value: String) {
     init {
         check_domain(value.length in MIN_LENGTH..MAX_LENGTH) { "회원 이름은 ${MIN_LENGTH}자 이상 ${MAX_LENGTH}자 이하여야 합니다." }
     }
