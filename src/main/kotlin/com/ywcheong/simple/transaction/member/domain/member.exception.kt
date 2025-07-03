@@ -2,7 +2,7 @@ package com.ywcheong.simple.transaction.member.domain
 
 import com.ywcheong.simple.transaction.common.exception.UserFaultException
 
-open class MemberException(msg: String) : UserFaultException(msg)
+sealed class MemberException(msg: String) : UserFaultException(msg)
 class InvalidMemberIdException(msg: String) : MemberException(msg)
 class InvalidMemberNameException(msg: String) : MemberException(msg)
 class InvalidMemberPhoneException(msg: String) : MemberException(msg)
