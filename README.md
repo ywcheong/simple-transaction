@@ -214,38 +214,28 @@ flowchart TD
 
 #### 회원 서비스
 
-| 엔드포인트           | 메서드    | 설명     |
-|-----------------|--------|--------|
-| `/members`      | POST   | 회원가입   |
-| `/members/{id}` | DELETE | 회원탈퇴   |
-| `/tokens`       | POST   | JWT 발급 |
+| 엔드포인트                     | 메서드    | 설명     |
+|---------------------------|--------|--------|
+| `/accounts`               | GET    | 계좌목록조회 |
+| `/accounts`               | POST   | 계좌개설   |
+| `/accounts/{id}`          | GET    | 계좌조회   |
+| `/accounts/{id}`          | DELETE | 계좌폐쇄   |
+| `/accounts/{id}/deposit`  | POST   | 입출금실행  |
+| `/accounts/{id}/withdraw` | POST   | 입출금실행  |
 
-모든 엔드포인트는 멱등하다.
-
-#### 계좌 서비스
-
-| 엔드포인트            | 메서드    | 설명     |
-|------------------|--------|--------|
-| `/accounts`      | GET    | 계좌목록조회 |
-| `/accounts`      | POST   | 계좌개설   |
-| `/accounts/{id}` | DELETE | 계좌폐쇄   |
-| `/accounts/{id}` | GET    | 계좌조회   |
-| `/accounts/{id}` | POST   | 입출금실행  |
-
-| 엔드포인트              | 메서드  | 설명     |
-|--------------------|------|--------|
-| `/transfers`       | POST | 이체실행   |
-| `/transfers/{iid}` | GET  | 이체결과조회 |
+| 엔드포인트             | 메서드  | 설명     |
+|-------------------|------|--------|
+| `/transfers`      | POST | 이체실행   |
+| `/transfers/{id}` | POST | 고액송금처리 |
 
 모든 엔드포인트는 멱등하다.
 
 #### 모니터링 서비스
 
-| 엔드포인트                                       | 메서드   | 설명            |
-|---------------------------------------------|-------|---------------|
-| `/monitoring`                               | GET   | 최근 이벤트 조회     |
-| `/monitoring/large-transfers`               | GET   | 대기 중인 고액송금 조회 |
-| `/monitoring/large-transfers/{id}/{action}` | PATCH | 고액송금에 대한 판단실시 |
+| 엔드포인트                         | 메서드 | 설명            |
+|-------------------------------|-----|---------------|
+| `/monitoring`                 | GET | 최근 이벤트 조회     |
+| `/monitoring/large-transfers` | GET | 대기 중인 고액송금 조회 |
 
 모든 엔드포인트는 멱등하다.
 
