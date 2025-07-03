@@ -64,7 +64,7 @@ class MemberIntegrationTest @Autowired constructor(
 
     @BeforeEach
     fun cleanDatabase() {
-        jdbc.execute("DELETE FROM Member WHERE TRUE")                // 테이블명은 실제 스키마에 맞게 수정
+        jdbc.execute("DELETE FROM member WHERE TRUE")                // 테이블명은 실제 스키마에 맞게 수정
     }
 
     @Test

@@ -12,7 +12,7 @@ import org.seasar.doma.Update
 import org.seasar.doma.boot.ConfigAutowireable
 
 @Entity
-@Table(name = "Member")
+@Table(name = "member")
 class MemberEntity (
     @Id
     var id: String? = null,
@@ -55,7 +55,7 @@ interface MemberDao {
         SELECT
             *
         FROM
-            Member
+            member
         WHERE
             id = /* memberId.value */'00000000-0000-0000-0000-000000000000'
     """)
@@ -66,7 +66,7 @@ interface MemberDao {
         SELECT
             *
         FROM
-            Member
+            member
         WHERE
             name = /* memberName.value */'x'
     """)
@@ -82,7 +82,7 @@ interface MemberDao {
     @Sql("""
         DELETE
         FROM
-            Member
+            member
         WHERE
             id = /* memberId.value */'00000000-0000-0000-0000-000000000000'
     """)
