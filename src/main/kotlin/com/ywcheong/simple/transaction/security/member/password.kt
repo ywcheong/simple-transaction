@@ -1,8 +1,8 @@
 package com.ywcheong.simple.transaction.security.member
 
-import com.ywcheong.simple.transaction.member.MemberHashedPassword
-import com.ywcheong.simple.transaction.member.MemberPasswordHashService
-import com.ywcheong.simple.transaction.member.MemberPlainPassword
+import com.ywcheong.simple.transaction.member.domain.MemberHashedPassword
+import com.ywcheong.simple.transaction.member.domain.MemberPasswordHashService
+import com.ywcheong.simple.transaction.member.domain.MemberPlainPassword
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.crypto.factory.PasswordEncoderFactories

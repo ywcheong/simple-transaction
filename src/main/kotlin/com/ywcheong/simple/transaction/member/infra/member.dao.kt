@@ -1,21 +1,14 @@
-package com.ywcheong.simple.transaction.member
+package com.ywcheong.simple.transaction.member.infra
 
-import org.seasar.doma.Dao
-import org.seasar.doma.Delete
-import org.seasar.doma.Entity
-import org.seasar.doma.Id
-import org.seasar.doma.Insert
-import org.seasar.doma.Select
-import org.seasar.doma.Sql
-import org.seasar.doma.Table
-import org.seasar.doma.Update
+import com.ywcheong.simple.transaction.member.domain.*
+import org.seasar.doma.*
 import org.seasar.doma.boot.ConfigAutowireable
+import org.springframework.stereotype.Repository
 
 @Entity
 @Table(name = "member")
-class MemberEntity (
-    @Id
-    var id: String? = null,
+class MemberEntity(
+    @Id var id: String? = null,
     var name: String? = null,
     var phone: String? = null,
     var password: String? = null,
@@ -51,30 +44,48 @@ class MemberEntity (
 @Dao
 @ConfigAutowireable
 interface MemberDao {
-    @Sql("""
+    @Sql(
+        """
         SELECT
             *
         FROM
             member
         WHERE
             id = /* id */'00000000-0000-0000-0000-000000000000'
-    """)
+    """
+    )
     @Select
     fun findById(id: String): MemberEntity?
 
     @Insert
     fun insert(memberEntity: MemberEntity): Int
 
-    @Update
-    fun update(memberEntity: MemberEntity): Int
-
-    @Sql("""
+    @Sql(
+        """
         DELETE
         FROM
             member
         WHERE
             id = /* id */'00000000-0000-0000-0000-000000000000'
-    """)
+    """
+    )
     @Delete
     fun delete(id: String): Int
+}
+
+@Repository
+class DefaultMemberRepository(
+    private val dao: MemberDao
+) : MemberRepository {
+    override fun findById(memberId: MemberId): Member? = dao.findById(memberId.value)?.toMember()
+
+    override fun delete(memberId: MemberId): Boolean {
+        val deleteCount = dao.delete(memberId.value)
+        return deleteCount == 1
+    }
+
+    override fun insert(member: Member): Boolean {
+        val insertCount = dao.insert(MemberEntity(member))
+        return insertCount == 1
+    }
 }

@@ -1,8 +1,9 @@
-package com.ywcheong.simple.transaction.member
+package com.ywcheong.simple.transaction.member.infra
 
 import com.ywcheong.simple.transaction.exception.UserFaultException
 import com.ywcheong.simple.transaction.exception.check_domain
 import com.ywcheong.simple.transaction.exception.logger_
+import com.ywcheong.simple.transaction.member.domain.*
 import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
 import com.ywcheong.simple.transaction.security.jwt.JwtService
 import org.springframework.dao.DuplicateKeyException
@@ -22,9 +23,9 @@ data class TokenResponse(val token: String)
 @RestController
 @RequestMapping("/members")
 class MemberController(
+    private val jwtService: JwtService,
     private val memberPasswordHashService: MemberPasswordHashService,
-    private val memberDao: MemberDao,
-    private val jwtService: JwtService
+    private val memberRepository: MemberRepository
 ) {
     @PostMapping
     fun registerNewMember(@RequestBody request: RegisterRequest): ResponseEntity<RegisterResponse> = with(request) {
@@ -45,9 +46,8 @@ class MemberController(
             status = memberStatus
         )
         try {
-            val memberEntity = MemberEntity(member)
-            val insertCount = memberDao.insert(memberEntity)
-            check(insertCount == 1) { "회원 DB에 삽입이 정상적으로 완료되지 않았습니다. (삽입 카운트: $insertCount)" }
+            val success = memberRepository.insert(member)
+            check(success) { "회원 DB에 삽입이 정상적으로 이루어지지 않았습니다." }
         } catch (ex: DuplicateKeyException) {
             throw UserFaultException("이미 존재하는 회원 ID입니다.")
         }
@@ -64,8 +64,8 @@ class MemberController(
         val memberId = MemberId(id)
 
         // 의존성 조율
-        val deleteCount = memberDao.delete(memberId.value)
-        check_domain(deleteCount == 1) { "이미 삭제된 회원입니다." }
+        val success = memberRepository.delete(memberId)
+        check_domain(success) { "이미 삭제된 회원입니다." }
 
         // 응답 반환
         val responseDto = WithdrawResponse(memberId.value)
@@ -79,7 +79,7 @@ class MemberController(
         val claimedPlainPassword = MemberPlainPassword(password)
 
         // 의존성 조율
-        val member = memberDao.findById(memberId.value)?.toMember() ?: throw UserFaultException("존재하지 않는 회원입니다.")
+        val member = memberRepository.findById(memberId) ?: throw UserFaultException("존재하지 않는 회원입니다.")
         val storedHashedPassword = member.password
         if (!memberPasswordHashService.isEqual(
                 claimedPlainPassword, storedHashedPassword

@@ -1,4 +1,4 @@
-package com.ywcheong.simple.transaction.member
+package com.ywcheong.simple.transaction.member.domain
 
 import com.ywcheong.simple.transaction.exception.check_domain
 

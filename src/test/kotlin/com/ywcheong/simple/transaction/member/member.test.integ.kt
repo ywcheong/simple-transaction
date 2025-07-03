@@ -1,5 +1,6 @@
 package com.ywcheong.simple.transaction.member
 
+import com.ywcheong.simple.transaction.member.infra.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
