@@ -1,6 +1,6 @@
 package com.ywcheong.simple.transaction.member.domain
 
-import com.ywcheong.simple.transaction.exception.UserFaultException
+import com.ywcheong.simple.transaction.common.exception.UserFaultException
 
 open class MemberException(msg: String) : UserFaultException(msg)
 class InvalidMemberIdException(msg: String) : MemberException(msg)

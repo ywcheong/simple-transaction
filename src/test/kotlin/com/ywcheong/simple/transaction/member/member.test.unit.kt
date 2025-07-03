@@ -1,6 +1,6 @@
 package com.ywcheong.simple.transaction.member
 
-import com.ywcheong.simple.transaction.exception.UserFaultException
+import com.ywcheong.simple.transaction.common.exception.UserFaultException
 import com.ywcheong.simple.transaction.member.domain.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

@@ -1,6 +1,6 @@
 package com.ywcheong.simple.transaction.member.infra
 
-import com.ywcheong.simple.transaction.exception.logger_
+import com.ywcheong.simple.transaction.common.exception.logger_
 import com.ywcheong.simple.transaction.member.domain.*
 import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
 import com.ywcheong.simple.transaction.security.jwt.JwtService

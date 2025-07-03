@@ -1,4 +1,4 @@
-package com.ywcheong.simple.transaction.exception
+package com.ywcheong.simple.transaction.common.exception
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.HttpStatus

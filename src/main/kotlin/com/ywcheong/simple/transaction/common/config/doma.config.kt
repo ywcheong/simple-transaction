@@ -1,4 +1,4 @@
-package com.ywcheong.simple.transaction.config
+package com.ywcheong.simple.transaction.common.config
 
 import org.seasar.doma.jdbc.Config
 import org.seasar.doma.jdbc.dialect.Dialect
