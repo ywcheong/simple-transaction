@@ -12,6 +12,8 @@ case "$1" in
     ;;
   prod)
     COMPOSE_FILE_OPTION=$PROD_COMPOSE_OPTION
+    echo "Building and copying server.jar..."
+    ./gradlew dockerMount
     ;;
   gradle-clean)
     echo "Cleaning gradle..."
@@ -38,8 +40,6 @@ esac
 
 case "$2" in
   start)
-    echo "Building and copying server.jar..."
-    ./gradlew dockerMount
     echo "Starting Docker Compose services..."
     docker compose $COMPOSE_FILE_OPTION up -d --build
     if [ $? -ne 0 ]; then
