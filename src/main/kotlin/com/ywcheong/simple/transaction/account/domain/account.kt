@@ -43,7 +43,7 @@ value class AccountBalanceChange(val value: Long) {
 }
 
 data class Account(
-    val id: AccountId, val owner: MemberId, val balance: AccountBalance
+    val id: AccountId, val owner: MemberId, val balance: AccountBalance, val version: Long
 ) {
     fun deposit(change: AccountBalanceChange): Account = this.copy(balance = balance + change)
     fun withdraw(change: AccountBalanceChange): Account = this.copy(balance = balance - change)

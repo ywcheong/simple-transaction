@@ -2,7 +2,7 @@
 CREATE TABLE member
 (
     id       VARCHAR(64)  NOT NULL PRIMARY KEY,
-    name     VARCHAR(64)  NOT NULL, -- member.name is unique: INDEX idx_member_name
+    name     VARCHAR(64)  NOT NULL,
     phone    VARCHAR(64)  NOT NULL,
     password VARCHAR(192) NOT NULL,
     status   INT          NOT NULL,
@@ -12,9 +12,12 @@ CREATE TABLE member
 -- account
 CREATE TABLE account
 (
-    id      VARCHAR(64) NOT NULL PRIMARY KEY,
-    owner   VARCHAR(64) NOT NULL, -- MSA 염두해 Foreign Key 제약은 제거
-    balance BIGINT      NOT NULL,
+    id          VARCHAR(64) NOT NULL PRIMARY KEY,
+    owner       VARCHAR(64) NOT NULL, -- MSA 염두해 Foreign Key 제약은 제거
+    is_withdrew BOOLEAN     NOT NULL,
+    balance     BIGINT      NOT NULL,
+    version     BIGINT      NOT NULL, -- 낙관 락 버전
+    INDEX idx_id (id),
     INDEX idx_owner (owner)
 );
 
