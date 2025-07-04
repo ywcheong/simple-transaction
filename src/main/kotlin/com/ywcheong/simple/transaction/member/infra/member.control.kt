@@ -1,6 +1,5 @@
 package com.ywcheong.simple.transaction.member.infra
 
-import com.ywcheong.simple.transaction.common.exception.logger_
 import com.ywcheong.simple.transaction.common.service.PrincipalService
 import com.ywcheong.simple.transaction.member.domain.*
 import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
@@ -8,7 +7,6 @@ import com.ywcheong.simple.transaction.security.jwt.JwtService
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 
 data class RegisterRequest(val id: String, val name: String, val password: String, val phone: String)
