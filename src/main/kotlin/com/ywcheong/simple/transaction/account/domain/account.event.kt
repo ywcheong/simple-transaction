@@ -30,6 +30,7 @@ interface AccountEvent {
     val accountFrom: AccountId?
     val accountTo: AccountId?
     val amount: AccountBalanceChange?
+    val previousId: AccountEventId?
     val reason: String?
 }
 
@@ -42,6 +43,7 @@ data class AccountDepositedEvent(
     override val type = AccountEventType.DEPOSIT
     override val accountFrom: AccountId? = null
     override val accountTo: AccountId? = null
+    override val previousId: AccountEventId? = null
     override val reason: String? = null
 }
 
@@ -54,6 +56,7 @@ data class AccountWithdrewEvent(
     override val type = AccountEventType.WITHDRAW
     override val accountFrom: AccountId? = null
     override val accountTo: AccountId? = null
+    override val previousId: AccountEventId? = null
     override val reason: String? = null
 }
 
@@ -66,11 +69,13 @@ data class AccountTransferAttemptEvent(
 ) : AccountEvent {
     override val type = AccountEventType.TRANSFER_ATTEMPT
     override val account: AccountId? = null
+    override val previousId: AccountEventId? = null
     override val reason: String? = null
 }
 
 data class AccountTransferAcceptedEvent(
     override val id: AccountEventId,
+    override val previousId: AccountEventId,
     override val issuedAt: Date,
     override val accountFrom: AccountId,
     override val accountTo: AccountId,
@@ -83,6 +88,7 @@ data class AccountTransferAcceptedEvent(
 
 data class AccountTransferRejectedEvent(
     override val id: AccountEventId,
+    override val previousId: AccountEventId,
     override val issuedAt: Date,
     override val accountFrom: AccountId,
     override val accountTo: AccountId,

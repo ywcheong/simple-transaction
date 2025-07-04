@@ -15,6 +15,7 @@ data class AccountEventEntity(
     @Column(name = "account_from") val accountFrom: String? = null,
     @Column(name = "account_to") val accountTo: String? = null,
     val amount: Long? = null,
+    @Column(name = "previous_id") val previousId: String? = null,
     val reason: String? = null,
     @Column(name = "issued_at") val issuedAt: Date,
 ) {
@@ -56,6 +57,7 @@ data class AccountEventEntity(
 
         AccountEventType.TRANSFER_ACCEPT -> AccountTransferAcceptedEvent(
             id = AccountEventId(id),
+            previousId = AccountEventId(requireNotNull(previousId)),
             issuedAt = issuedAt,
             accountFrom = AccountId(requireNotNull(accountFrom)),
             accountTo = AccountId(requireNotNull(accountTo)),
@@ -64,6 +66,7 @@ data class AccountEventEntity(
 
         AccountEventType.TRANSFER_REJECT -> AccountTransferRejectedEvent(
             id = AccountEventId(id),
+            previousId = AccountEventId(requireNotNull(previousId)),
             issuedAt = issuedAt,
             accountFrom = AccountId(requireNotNull(accountFrom)),
             accountTo = AccountId(requireNotNull(accountTo)),
@@ -71,7 +74,7 @@ data class AccountEventEntity(
             reason = requireNotNull(reason)
         )
 
-        else -> throw IllegalStateException("비정상적인 Event 타입입니다. (값 = $type)")
+        else -> throw UnexpectedAccountEventType(type)
     }
 }
 

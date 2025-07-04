@@ -13,4 +13,5 @@ class AccountNotOwnedException : AccountException("계좌의 소유주만 접근
 class AccountBalanceNotZeroException : AccountException("계좌에 잔액이 남아 있으면 계좌를 폐쇄할 수 없습니다.")
 
 sealed class UnexpectAccountException(msg: String) : RuntimeException(msg)
-class UnexpectedAccountRepositoryFailedException : RuntimeException("계좌 저장에 문제가 발생했습니다.")
+class UnexpectedAccountRepositoryFailedException : UnexpectAccountException("계좌 저장에 문제가 발생했습니다.")
+class UnexpectedAccountEventType(type: Int) : UnexpectAccountException("계좌 이벤트의 타입이 잘못되었습니다. (타입 $type)")

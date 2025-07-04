@@ -27,13 +27,15 @@ CREATE TABLE account_event
     account_from VARCHAR(64),
     account_to   VARCHAR(64),
     amount       BIGINT,
+    previous_id  VARCHAR(64),
     reason       VARCHAR(255),
     issued_at    DATETIME    NOT NULL,
     INDEX idx_account (account),
     INDEX idx_account_from (account_from),
     INDEX idx_account_to (account_to),
     INDEX idx_event_type (event_type),
-    INDEX idx_issued_at (issued_at)
+    INDEX idx_issued_at (issued_at),
+    INDEX idx_previous_id (previous_id)
 );
 
 -- 애플리케이션에 권한 부여
