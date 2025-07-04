@@ -1,9 +1,6 @@
 package com.ywcheong.simple.transaction.account.infra
 
-import com.ywcheong.simple.transaction.account.domain.Account
-import com.ywcheong.simple.transaction.account.domain.AccountBalance
-import com.ywcheong.simple.transaction.account.domain.AccountId
-import com.ywcheong.simple.transaction.account.domain.AccountRepository
+import com.ywcheong.simple.transaction.account.domain.*
 import com.ywcheong.simple.transaction.member.domain.MemberId
 import org.seasar.doma.*
 import org.seasar.doma.boot.ConfigAutowireable
@@ -85,14 +82,14 @@ class DefaultAccountRepository(
     override fun findAccountByOwner(memberId: MemberId): List<Account> =
         dao.findByOwner(memberId.value).map { it.toAccount() }
 
-    override fun insert(account: Account): Boolean {
+    override fun insert(account: Account) {
         val insertCount = dao.insert(AccountEntity(account)).count
-        return insertCount == 1
+        if (insertCount != 1) throw UnexpectedAccountRepositoryFailedException()
     }
 
-    override fun update(account: Account): Boolean {
+    override fun update(account: Account) {
         val updateCount = dao.update(AccountEntity(account)).count
-        return updateCount == 1
+        if (updateCount != 1) throw UnexpectedAccountRepositoryFailedException()
     }
 
     override fun delete(accountId: AccountId): Boolean {
