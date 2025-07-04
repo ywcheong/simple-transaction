@@ -130,7 +130,7 @@ class AccountController(
         var updatedBalance: AccountBalance? = null
         val tx = transactionService.transaction()
 
-        val updatedAccount = tx.required {
+        tx.required {
             val account = getAccountWithCheck(accountId_)
             val updatedAccount = account.withdraw(depositChange)
             accountRepository.update(updatedAccount)

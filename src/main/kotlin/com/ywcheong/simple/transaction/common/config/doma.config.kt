@@ -10,12 +10,12 @@ import org.springframework.context.annotation.Configuration
 import javax.sql.DataSource
 
 
-
 @Configuration
 class DomaConfig(
-    private val beanDataSource: DataSource
+    beanDataSource: DataSource
 ) : Config {
-    private final val source = LocalTransactionDataSource(beanDataSource)
+    private final val dataSource = beanDataSource
+    private final val source = LocalTransactionDataSource(dataSource)
     private final val manager = LocalTransactionManager(source.getLocalTransaction(jdbcLogger))
 
     override fun getDataSource(): DataSource = source
