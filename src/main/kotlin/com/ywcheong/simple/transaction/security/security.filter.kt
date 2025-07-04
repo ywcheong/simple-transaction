@@ -3,6 +3,7 @@ package com.ywcheong.simple.transaction.security
 import com.ywcheong.simple.transaction.security.jwt.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -19,8 +20,9 @@ class SecurityConfig(
         csrf { it.disable() }
         sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
         authorizeHttpRequests {
-            it.requestMatchers("/members", "/members/tokens", "/help/**").permitAll()
-            it.anyRequest().authenticated()
+            it.requestMatchers(HttpMethod.POST, "/members").permitAll()
+                .requestMatchers("/members/tokens", "/help/**")
+                .permitAll().anyRequest().authenticated()
         }
         addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)
         build()

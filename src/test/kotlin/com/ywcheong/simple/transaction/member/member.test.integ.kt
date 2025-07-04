@@ -63,6 +63,13 @@ class MemberIntegrationTest @Autowired constructor(
         )
     }
 
+    private fun withdrawNoParseNoAuth(): ResponseEntity<String> {
+        val headers = HttpHeaders()
+        return rest.exchange(
+            "/members", HttpMethod.DELETE, HttpEntity<Void>(headers), String::class.java
+        )
+    }
+
     @BeforeEach
     fun cleanDatabase() {
         jdbc.execute("DELETE FROM member WHERE TRUE")                // 테이블명은 실제 스키마에 맞게 수정
@@ -125,6 +132,15 @@ class MemberIntegrationTest @Autowired constructor(
 
         // Act
         val response = withdraw(tamperedToken)
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+    }
+
+    @Test
+    fun `가입하지 않고 탈퇴할 수 없다`() {
+        // Act
+        val response = withdrawNoParseNoAuth()
 
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
