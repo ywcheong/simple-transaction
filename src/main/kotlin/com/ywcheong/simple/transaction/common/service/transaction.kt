@@ -9,6 +9,6 @@ class TransactionService (
     private val domaConfig: DomaConfig
 ) {
     fun transaction() : TransactionManager {
-        return domaConfig.transactionManager!!
+        return domaConfig.transactionManager
     }
 }

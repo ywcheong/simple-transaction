@@ -13,10 +13,10 @@ import javax.sql.DataSource
 
 @Configuration
 class DomaConfig(
-    val beanDataSource: DataSource
+    private val beanDataSource: DataSource
 ) : Config {
-    private val source = LocalTransactionDataSource(beanDataSource)
-    private val manager = LocalTransactionManager(source.getLocalTransaction(jdbcLogger))
+    private final val source = LocalTransactionDataSource(beanDataSource)
+    private final val manager = LocalTransactionManager(source.getLocalTransaction(jdbcLogger))
 
     override fun getDataSource(): DataSource = source
     override fun getTransactionManager(): TransactionManager = manager
