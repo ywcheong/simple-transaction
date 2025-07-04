@@ -76,7 +76,20 @@ class MemberIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `두 번째 탈퇴는 실패한다`() {
+    fun `가입 후 로그인 후 탈퇴할 수 있다`() {
+        // Arrange
+        assertEquals(HttpStatus.OK, register().statusCode)
+        val token = issueToken().body!!.token
+
+        // Act
+        val firstWithdraw = withdraw(token)
+
+        // Assert
+        assertEquals(HttpStatus.OK, firstWithdraw.statusCode)
+    }
+
+    @Test
+    fun `두 번 탈퇴할 수 없다`() {
         // Arrange
         assertEquals(HttpStatus.OK, register().statusCode)
         val token = issueToken().body!!.token
