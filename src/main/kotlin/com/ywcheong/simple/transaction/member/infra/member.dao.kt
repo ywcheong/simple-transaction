@@ -84,8 +84,8 @@ class DefaultMemberRepository(
         return deleteCount == 1
     }
 
-    override fun insert(member: Member): Boolean {
+    override fun insert(member: Member) {
         val insertCount = dao.insert(MemberEntity(member))
-        return insertCount == 1
+        if (insertCount != 1) throw UnexpectedMemberRepositoryFailedException()
     }
 }

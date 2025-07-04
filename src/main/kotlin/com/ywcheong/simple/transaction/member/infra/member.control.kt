@@ -44,8 +44,7 @@ class MemberController(
             status = memberStatus
         )
         try {
-            val success = memberRepository.insert(member)
-            check(success) { "회원 DB에 삽입이 정상적으로 이루어지지 않았습니다." }
+            memberRepository.insert(member)
         } catch (ex: DuplicateKeyException) {
             throw DuplicateMemberIdException()
         }
