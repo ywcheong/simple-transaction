@@ -55,7 +55,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `사전 준비가 정상적으로 동작한다`() {
+    fun `회원가입 후 계좌를 개설할 수 있다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val accountA1 = openAccount(tokenA)
         val tokenB = registerAndLogin(userBId, userBName, userBPassword, userBPhone)
@@ -69,7 +69,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `계좌 서비스 통합 시나리오`() {
+    fun `계좌 서비스를 정상적으로 이용할 수 있다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val accountA1 = openAccount(tokenA)
         val tokenB = registerAndLogin(userBId, userBName, userBPassword, userBPhone)
@@ -200,7 +200,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `타인 계좌에 접근, 입출금, 송금 불가`() {
+    fun `타인 계좌를 자기 계좌처럼 접근, 입금, 출금, 송금할 수 없다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val tokenB = registerAndLogin(userBId, userBName, userBPassword, userBPhone)
         val accountB1 = openAccount(tokenB)
@@ -228,7 +228,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `존재하지 않는 계좌 조회 불가`() {
+    fun `존재하지 않는 계좌를 조회할 수 없다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val fakeAccountId = "00000000-0000-4000-8000-000000000000"
         val response = rest.exchange(
@@ -241,7 +241,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `잔액 남은 계좌는 폐쇄 불가`() {
+    fun `잔액이 남은 계좌는 닫을 수 없다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val accountA1 = openAccount(tokenA)
         rest.postForEntity(
@@ -266,7 +266,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `잔액 초과 출금 불가`() {
+    fun `잔액을 초과해서 출금할 수 없다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val accountA1 = openAccount(tokenA)
         rest.postForEntity(
@@ -290,7 +290,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `음수 금액 입출금, 송금 불가`() {
+    fun `음수의 금액을 입금, 출금, 송금할 수 없다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val accountA1 = openAccount(tokenA)
         rest.postForEntity(
