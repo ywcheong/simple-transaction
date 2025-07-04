@@ -1,18 +1,44 @@
 -- member 테이블 생성
 CREATE TABLE member
 (
-    id       VARCHAR(36)  NOT NULL,
-    name     VARCHAR(16)  NOT NULL, -- member.name is unique: INDEX idx_member_name
-    phone    VARCHAR(32)  NOT NULL,
-    password VARCHAR(256) NOT NULL,
+    id       VARCHAR(64)  NOT NULL PRIMARY KEY,
+    name     VARCHAR(64)  NOT NULL, -- member.name is unique: INDEX idx_member_name
+    phone    VARCHAR(64)  NOT NULL,
+    password VARCHAR(192) NOT NULL,
     status   INT          NOT NULL,
-    PRIMARY KEY (id)
+    UNIQUE INDEX idx_name (name)
 );
 
--- member 이름에 대한 유니크 인덱스
-CREATE UNIQUE INDEX idx_member_name ON member (name);
+-- account
+CREATE TABLE account
+(
+    id      VARCHAR(64) NOT NULL PRIMARY KEY,
+    owner   VARCHAR(64) NOT NULL, -- MSA 염두해 Foreign Key 제약은 제거
+    balance BIGINT      NOT NULL,
+    INDEX idx_owner (owner)
+);
+
+-- account_event
+CREATE TABLE account_event
+(
+    id           VARCHAR(64) NOT NULL PRIMARY KEY,
+    event_type   TINYINT     NOT NULL,
+    account      VARCHAR(64),
+    account_from VARCHAR(64),
+    account_to   VARCHAR(64),
+    amount       BIGINT,
+    reason       VARCHAR(255),
+    issued_at    DATETIME    NOT NULL,
+    INDEX idx_account (account),
+    INDEX idx_account_from (account_from),
+    INDEX idx_account_to (account_to),
+    INDEX idx_event_type (event_type),
+    INDEX idx_issued_at (issued_at)
+);
 
 -- 애플리케이션에 권한 부여
 use stdb;
 GRANT SELECT, INSERT, UPDATE, DELETE ON member TO 'stserver'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON account TO 'stserver'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON account_event TO 'stserver'@'%';
 FLUSH PRIVILEGES;
