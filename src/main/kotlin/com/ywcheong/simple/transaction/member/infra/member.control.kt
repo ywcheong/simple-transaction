@@ -1,6 +1,7 @@
 package com.ywcheong.simple.transaction.member.infra
 
 import com.ywcheong.simple.transaction.common.exception.logger_
+import com.ywcheong.simple.transaction.common.service.PrincipalService
 import com.ywcheong.simple.transaction.member.domain.*
 import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
 import com.ywcheong.simple.transaction.security.jwt.JwtService
@@ -23,6 +24,7 @@ data class TokenResponse(val token: String)
 class MemberController(
     private val jwtService: JwtService,
     private val memberPasswordHashService: MemberPasswordHashService,
+    private val principalService: PrincipalService,
     private val memberRepository: MemberRepository
 ) {
     @PostMapping
@@ -57,9 +59,7 @@ class MemberController(
     @DeleteMapping
     fun withdrawExistingMember(): ResponseEntity<WithdrawResponse> {
         // 요청 준비
-        val id = SecurityContextHolder.getContext().authentication.principal as String
-        logger_.info { "Context ID: $id" }
-        val memberId = MemberId(id)
+        val memberId = principalService.getMemberId()
 
         // 의존성 조율
         val success = memberRepository.delete(memberId)
