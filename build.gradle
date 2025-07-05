@@ -27,47 +27,49 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    testImplementation 'org.springframework.security:spring-security-test'
+    // --- Spring Boot Core ---
+    implementation 'org.springframework.boot:spring-boot-starter'           // Spring Boot 기본 스타터
+    implementation 'org.springframework.boot:spring-boot-starter-web'       // 웹 애플리케이션 (Spring MVC)
+    implementation 'org.springframework.boot:spring-boot-starter-security'  // Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'  // 운영/모니터링 엔드포인트
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'      // JDBC 지원
 
-    // Annotation Processor
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    // --- SpringDoc (API 문서화) ---
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9' // OpenAPI 문서 UI
 
-    // Implementation + Runtime
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.kafka:spring-kafka'
-    implementation 'io.github.oshai:kotlin-logging-jvm:7.0.3'           // kotlin logger, for easy logging
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin' // kotlin logger, for easy logging
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9' // SpringDoc, for documentation
+    // --- Kotlin 관련 ---
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'                 // Kotlin 리플렉션
+    implementation 'io.github.oshai:kotlin-logging-jvm:7.0.3'            // Kotlin 로깅
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'  // Kotlin용 Jackson 지원
 
-    // JJwt Support
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    // --- Kafka (메시징) ---
+    implementation 'org.springframework.kafka:spring-kafka'              // Kafka 연동
+    testImplementation 'org.springframework.kafka:spring-kafka-test'     // Kafka 테스트
 
-    // DBMS (MySQL) Connection
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    // --- JWT (인증/인가) ---
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'                     // JWT API
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'                       // JWT 구현체
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'                    // JWT Jackson 지원
 
-    // DBMS Interface: DOMA support
-    implementation 'org.seasar.doma:doma-kotlin:3.7.0'
-    implementation 'org.seasar.doma.boot:doma-spring-boot-starter:2.4.0'
-    kapt 'org.seasar.doma:doma-processor:3.7.0'
+    // --- DBMS: MySQL & Doma (ORM) ---
+    runtimeOnly 'com.mysql:mysql-connector-j'                            // MySQL 드라이버
+    implementation 'org.seasar.doma:doma-kotlin:3.7.0'                   // Doma Kotlin 지원 (ORM)
+    implementation 'org.seasar.doma.boot:doma-spring-boot-starter:2.4.0' // Doma Spring Boot 연동
+    kapt 'org.seasar.doma:doma-processor:3.7.0'                          // Doma 코드 생성기
 
-    // Development
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    // --- 개발 편의 ---
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'      // 개발용 자동 재시작 등
 
-    // Test Implementation + Runtime
-    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.springframework.kafka:spring-kafka-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // --- 어노테이션 프로세서 ---
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor' // 설정 메타데이터 생성
+
+    // --- 테스트 ---
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'              // Kotlin + JUnit5 테스트
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'    // Spring Boot 테스트 지원
+    testImplementation 'org.springframework.security:spring-security-test'    // Spring Security 테스트
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'              // JUnit Platform 런처
 }
+
 
 kotlin {
     compilerOptions {
