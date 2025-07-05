@@ -103,6 +103,6 @@ interface AccountEventDao {
 class DefaultAccountEventRepository(
     private val dao: AccountEventDao
 ) : AccountEventRepository {
-    override fun selectById(eventId: AccountEventId): AccountEvent? = dao.findById(eventId.value)?.toAccountEvent()
+    override fun findById(eventId: AccountEventId): AccountEvent? = dao.findById(eventId.value)?.toAccountEvent()
     override fun insert(event: AccountEvent): Boolean = dao.insert(AccountEventEntity(event)).count == 1
 }
