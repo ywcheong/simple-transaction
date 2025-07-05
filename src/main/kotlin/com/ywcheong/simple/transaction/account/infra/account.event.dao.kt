@@ -74,7 +74,7 @@ data class AccountEventEntity(
             reason = requireNotNull(reason)
         )
 
-        else -> throw UnexpectedAccountEventType(type)
+        else -> throw UnexpectedAccountEventTypeException(type)
     }
 }
 

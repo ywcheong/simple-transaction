@@ -85,12 +85,12 @@ class DefaultAccountRepository(
 
     override fun insert(account: Account) {
         val insertCount = dao.insert(AccountEntity(account)).count
-        if (insertCount != 1) throw UnexpectedAccountRepositoryFailedException()
+        if (insertCount != 1) throw UnexpectedAccountRepositoryException()
     }
 
     override fun update(account: Account) {
         val updateCount = dao.update(AccountEntity(account)).count
-        if (updateCount != 1) throw UnexpectedAccountRepositoryFailedException()
+        if (updateCount != 1) throw UnexpectedAccountRepositoryException()
     }
 
     override fun delete(account: Account) {
@@ -98,6 +98,6 @@ class DefaultAccountRepository(
         // 이것은 구현에 따른 숨겨진 로직이므로, 컨트롤러에는 Delete 인터페이스로 제공
         val accountEntity = AccountEntity(account, isWithdrew = true)
         val updateCount = dao.update(accountEntity).count
-        if (updateCount != 1) throw UnexpectedAccountRepositoryFailedException()
+        if (updateCount != 1) throw UnexpectedAccountRepositoryException()
     }
 }
