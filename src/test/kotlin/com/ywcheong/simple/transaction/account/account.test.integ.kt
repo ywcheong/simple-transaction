@@ -39,6 +39,7 @@ class AccountIntegrationTest @Autowired constructor(
     @BeforeEach
     fun setup() {
         jdbc.execute("DELETE FROM account WHERE TRUE")
+        jdbc.execute("DELETE FROM account_event WHERE TRUE")
         jdbc.execute("DELETE FROM member WHERE TRUE")
     }
 
@@ -241,7 +242,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `잔액이 남은 계좌는 닫을 수 없다`() {
+    fun `잔고가 남은 계좌는 닫을 수 없다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val accountA1 = openAccount(tokenA)
         rest.postForEntity(
@@ -266,7 +267,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `잔액을 초과해서 출금할 수 없다`() {
+    fun `잔고를 초과해서 출금할 수 없다`() {
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val accountA1 = openAccount(tokenA)
         rest.postForEntity(
@@ -327,13 +328,97 @@ class AccountIntegrationTest @Autowired constructor(
         )
         assertEquals(500, balanceRes.body!!.balance)
     }
+
+    @Test
+    fun `고액 송금은 타인에게 보낼 때 계류된다`() {
+        // 회원 가입 및 로그인
+        val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
+        val tokenB = registerAndLogin(userBId, userBName, userBPassword, userBPhone)
+        val accountA1 = openAccount(tokenA)
+        val accountB1 = openAccount(tokenB)
+
+        // B1 계좌에 2,000,000원 입금
+        rest.postForEntity(
+            "/accounts/$accountB1/deposit",
+            HttpEntity(DepositRequest(2_000_000), HttpHeaders().apply { setBearerAuth(tokenB) }),
+            DepositResponse::class.java
+        )
+
+        // B1 → A1 (타인, 1,000,000원) : Pending
+        val transferToA1 = rest.postForEntity(
+            "/transfers/",
+            HttpEntity(TransferRequest(accountB1, accountA1, 1_000_000), HttpHeaders().apply { setBearerAuth(tokenB) }),
+            TransferResponse::class.java
+        )
+        assertEquals(true, transferToA1.body!!.pending)
+
+        // 잔고 조회
+        val balanceB1 = rest.exchange(
+            "/accounts/$accountB1",
+            HttpMethod.GET,
+            HttpEntity<Void>(HttpHeaders().apply { setBearerAuth(tokenB) }),
+            LookupOneAccountResponse::class.java
+        )
+        val balanceA1 = rest.exchange(
+            "/accounts/$accountA1",
+            HttpMethod.GET,
+            HttpEntity<Void>(HttpHeaders().apply { setBearerAuth(tokenA) }),
+            LookupOneAccountResponse::class.java
+        )
+        // B1: 2,000,000 - 1,000,000(대기) = 1,000,000
+        assertEquals(1_000_000, balanceB1.body!!.balance)
+        // A1: 0 (대기이므로 아직 반영 안 됨)
+        assertEquals(0, balanceA1.body!!.balance)
+    }
+
+    @Test
+    fun `고액 송금은 본인에게 보낼 때 즉시 처리된다`() {
+        // 회원 가입 및 로그인
+        val tokenB = registerAndLogin(userBId, userBName, userBPassword, userBPhone)
+        val accountB1 = openAccount(tokenB)
+        val accountB2 = openAccount(tokenB)
+
+        // B1 계좌에 2,000,000원 입금
+        rest.postForEntity(
+            "/accounts/$accountB1/deposit",
+            HttpEntity(DepositRequest(2_000_000), HttpHeaders().apply { setBearerAuth(tokenB) }),
+            DepositResponse::class.java
+        )
+
+        // B1 → B2 (본인, 1,000,000원) : Immediate
+        val transferToB2 = rest.postForEntity(
+            "/transfers/",
+            HttpEntity(TransferRequest(accountB1, accountB2, 1_000_000), HttpHeaders().apply { setBearerAuth(tokenB) }),
+            TransferResponse::class.java
+        )
+        assertEquals(false, transferToB2.body!!.pending)
+
+        // 잔고 조회
+        val balanceB1 = rest.exchange(
+            "/accounts/$accountB1",
+            HttpMethod.GET,
+            HttpEntity<Void>(HttpHeaders().apply { setBearerAuth(tokenB) }),
+            LookupOneAccountResponse::class.java
+        )
+        val balanceB2 = rest.exchange(
+            "/accounts/$accountB2",
+            HttpMethod.GET,
+            HttpEntity<Void>(HttpHeaders().apply { setBearerAuth(tokenB) }),
+            LookupOneAccountResponse::class.java
+        )
+        // B1: 2,000,000 - 1,000,000(즉시) = 1,000,000
+        assertEquals(1_000_000, balanceB1.body!!.balance)
+        // B2: 1,000,000 (즉시)
+        assertEquals(1_000_000, balanceB2.body!!.balance)
+    }
 }
 
 data class DepositRequest(val amount: Long)
 data class WithdrawRequest(val amount: Long)
-data class DepositResponse(val accountId: String, val newBalance: Long)
-data class WithdrawResponse(val accountId: String, val newBalance: Long)
+data class DepositResponse(val eventId: String, val newBalance: Long)
+data class WithdrawResponse(val eventId: String, val newBalance: Long)
 data class LookupEveryAccountsResponse(val accountIds: List<String>)
 data class LookupOneAccountResponse(val balance: Long)
 data class OpenAccountResponse(val accountId: String)
 data class TransferRequest(val from: String, val to: String, val amount: Long)
+data class TransferResponse(val eventId: String, val pending: Boolean)

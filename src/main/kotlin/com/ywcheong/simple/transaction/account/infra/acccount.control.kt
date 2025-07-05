@@ -10,8 +10,8 @@ import java.util.*
 
 data class DepositRequest(val amount: Long)
 data class WithdrawRequest(val amount: Long)
-data class DepositResponse(val accountId: String, val newBalance: Long)
-data class WithdrawResponse(val accountId: String, val newBalance: Long)
+data class DepositResponse(val eventId: String, val newBalance: Long)
+data class WithdrawResponse(val eventId: String, val newBalance: Long)
 
 data class LookupEveryAccountsResponse(val accountIds: List<String>)
 data class LookupOneAccountResponse(val balance: Long)
@@ -61,11 +61,12 @@ class AccountController(
         // 요청 준비
         val accountId = AccountId.createUnique()
         val zeroBalance = AccountBalance(0)
+        val zeroPendingBalance = AccountPendingBalance(0)
 
         // 의존성 조율
         val memberId = principalService.getMemberId()
         val account = Account(
-            id = accountId, owner = memberId, balance = zeroBalance, version = 0
+            id = accountId, owner = memberId, balance = zeroBalance, version = 0, pendingBalance = zeroPendingBalance
         )
         accountRepository.insert(account)
 
@@ -96,11 +97,8 @@ class AccountController(
     ): ResponseEntity<DepositResponse> {
         // 요청 준비
         val accountId = AccountId(id)
+        val eventId = AccountEventId.createUnique()
         val depositChange = AccountBalanceChange(request.amount)
-
-        val event = AccountDepositedEvent(
-            id = AccountEventId.createUnique(), issuedAt = Date(), account = accountId, amount = depositChange
-        )
 
         // 의존성 조율
         // TODO 멱등성
@@ -111,6 +109,11 @@ class AccountController(
             val account = getAccountWithCheck(accountId)
             val updatedAccount = account.deposit(depositChange)
             accountRepository.update(updatedAccount)
+
+            val event = AccountDepositedEvent(
+                id = eventId, issuedAt = Date(), issuedBy = account.owner, account = accountId, amount = depositChange
+            )
+
             eventRepository.insert(event)
             updatedBalance = updatedAccount.balance
         }
@@ -118,7 +121,7 @@ class AccountController(
         // 응답 반환
         return ResponseEntity.status(HttpStatus.OK).body(
             DepositResponse(
-                accountId = id, newBalance = requireNotNull(updatedBalance).value
+                eventId = eventId.value, newBalance = requireNotNull(updatedBalance).value
             )
         )
     }
@@ -130,10 +133,7 @@ class AccountController(
         // 요청 준비
         val accountId = AccountId(id)
         val withdrawChange = AccountBalanceChange(request.amount)
-
-        val event = AccountWithdrewEvent(
-            id = AccountEventId.createUnique(), issuedAt = Date(), account = accountId, amount = withdrawChange
-        )
+        val eventId = AccountEventId.createUnique()
 
         // 의존성 조율
         // TODO 멱등성
@@ -144,6 +144,11 @@ class AccountController(
             val account = getAccountWithCheck(accountId)
             val updatedAccount = account.withdraw(withdrawChange)
             accountRepository.update(updatedAccount)
+
+            val event = AccountWithdrewEvent(
+                id = eventId, issuedAt = Date(), issuedBy = account.owner, account = accountId, amount = withdrawChange
+            )
+
             eventRepository.insert(event)
             updatedBalance = updatedAccount.balance
         }
@@ -151,7 +156,7 @@ class AccountController(
         // 응답 반환
         return ResponseEntity.status(HttpStatus.OK).body(
             WithdrawResponse(
-                accountId = id, newBalance = requireNotNull(updatedBalance).value
+                eventId = eventId.value, newBalance = requireNotNull(updatedBalance).value
             )
         )
     }
@@ -165,9 +170,9 @@ class AccountController(
 }
 
 data class TransferRequest(val from: String, val to: String, val amount: Long)
-data class TransferResponse(val eventId: String, val delayed: Boolean)
+data class TransferResponse(val eventId: String, val pending: Boolean)
 
-data class CheckTransferRequest(val isAccepted: Boolean, val reasonRejected: String? = null)
+data class CheckTransferResponse(val isPending: Boolean, val isAccepted: Boolean, val reasonRejected: String? = null)
 
 @RestController
 @RequestMapping("/transfers")
@@ -186,9 +191,10 @@ class TransferController(
 
         // 의존성 조율
         // TODO 멱등성
-
         val tx = transactionService.transaction()
-        var response: TransferResponse? = null
+        var transferEventId: AccountEventId? = null
+        var transferResult: TransferResult? = null
+
         tx.required {
             // 송금자와 수금자를 로드합니다. 이때 송금자는 지금 로그인한 사람임을 검증합니다.
             val fromAccount = accountRepository.findAccountById(fromAccountId) ?: throw AccountNotFoundException()
@@ -196,76 +202,108 @@ class TransferController(
             if (fromAccount.owner != currentUser) throw AccountNotOwnedException()
             val toAccount = accountRepository.findAccountById(toAccountId) ?: throw AccountNotFoundException()
 
+            // 이체를 생성하고, 실행한 뒤 저장합니다.
             val transfer = Transfer(
                 fromAccount = fromAccount, toAccount = toAccount, amount = balanceChange
             )
-
-            // 고액 송금인지 판정한 뒤, 이체를 실행합니다.
-            // 트랜잭션 및 낙관 락으로 일관성을 보장합니다.
-            if (transfer.isLargeTransfer()) {
-                val eventId = executeDelayedTransfer(transfer)
-                response = TransferResponse(
-                    eventId = eventId.value, delayed = true
-                )
-            } else {
-                val eventId = executeImmediateTransfer(transfer)
-                response = TransferResponse(
-                    eventId = eventId.value, delayed = false
-                )
-            }
+            val result = transfer.execute()
+            transferEventId = saveTransferResult(result)
+            transferResult = result
         }
 
-        // 응답 반환
-        if (response == null) {
-            throw UnexpectedAccountTransferException()
-        }
+        return when (requireNotNull(transferResult)) {
+            is TransferResult.Pending -> ResponseEntity.status(HttpStatus.ACCEPTED).body(
+                TransferResponse(
+                    eventId = requireNotNull(transferEventId).value, pending = true
+                )
+            )
 
-        if (response!!.delayed) {
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(response)
-        } else {
-            return ResponseEntity.status(HttpStatus.OK).body(response)
+            is TransferResult.Complete -> ResponseEntity.status(HttpStatus.OK).body(
+                TransferResponse(
+                    eventId = requireNotNull(transferEventId).value, pending = false
+                )
+            )
         }
     }
 
-    fun executeImmediateTransfer(transfer: Transfer): AccountEventId = with(transfer) {
-        val newFromAccount = fromAccount.withdraw(amount)
-        val newToAccount = toAccount.deposit(amount)
+    private fun saveTransferResult(result: TransferResult): AccountEventId = when (result) {
+        is TransferResult.Pending -> savePendingTransfer(result)
+        is TransferResult.Complete -> saveImmediateTransfer(result)
+    }
 
+    private fun saveImmediateTransfer(result: TransferResult.Complete): AccountEventId = with(result) {
         val event = AccountTransferAcceptedEvent(
             id = AccountEventId.createUnique(),
-            previousId = null,
             issuedAt = Date(),
-            accountFrom = fromAccount.id,
-            accountTo = toAccount.id,
-            amount = amount
-        )
-
-        accountRepository.update(newFromAccount)
-        accountRepository.update(newToAccount)
-        eventRepository.insert(event)
-
-        event.id
-    }
-
-    fun executeDelayedTransfer(transfer: Transfer): AccountEventId = with(transfer) {
-        val event = AccountTransferAttemptEvent(
-            id = AccountEventId.createUnique(),
-            issuedAt = Date(),
+            issuedBy = fromAccount.owner,
             accountFrom = fromAccount.id,
             accountTo = toAccount.id,
             amount = amount,
         )
 
+        accountRepository.update(fromAccount)
+        accountRepository.update(toAccount)
         eventRepository.insert(event)
+
         event.id
     }
 
-    @GetMapping("/{eventId}")
-    fun checkTransfer(@PathVariable transferEventId: String, @RequestBody request: CheckTransferRequest) {
+    private fun savePendingTransfer(result: TransferResult.Pending): AccountEventId = with(result) {
+        val event = AccountTransferAttemptEvent(
+            id = AccountEventId.createUnique(),
+            issuedAt = Date(),
+            issuedBy = fromAccount.owner,
+            accountFrom = fromAccount.id,
+            accountTo = toAccount.id,
+            amount = amount,
+            subsequentId = null
+        )
+
+        accountRepository.update(fromAccount)
+        accountRepository.update(toAccount)
+        eventRepository.insert(event)
+
+        event.id
+    }
+
+    @GetMapping("/{id}")
+    fun checkTransfer(@PathVariable id: String): ResponseEntity<CheckTransferResponse> {
         // 요청 준비
+        val eventId = AccountEventId(id)
 
         // 의존성 조율
+        val response = findEventById(eventId)
+        return ResponseEntity.status(HttpStatus.OK).body(response)
+    }
 
-        // 응답 반환
+    private fun findEventById(eventId: AccountEventId): CheckTransferResponse {
+        val event: AccountEvent = eventRepository.findById(eventId) ?: throw AccountTransferEventNotFoundException()
+        val currentUser = principalService.getMemberId()
+        if (event.issuedBy != currentUser) throw AccountNotOwnedException()
+
+        when (event.type) {
+            AccountEventType.TRANSFER_ACCEPT -> {
+                return CheckTransferResponse(
+                    isPending = false, isAccepted = true, reasonRejected = null
+                )
+            }
+
+            AccountEventType.TRANSFER_ATTEMPT -> {
+                if (event.subsequentId != null) return findEventById(event.subsequentId!!)
+                return CheckTransferResponse(
+                    isPending = true, isAccepted = false, reasonRejected = null
+                )
+            }
+
+            AccountEventType.TRANSFER_REJECT -> {
+                return CheckTransferResponse(
+                    isPending = false, isAccepted = false, reasonRejected = event.reason
+                )
+            }
+
+            else -> {
+                throw AccountEventNotTransferException()
+            }
+        }
     }
 }

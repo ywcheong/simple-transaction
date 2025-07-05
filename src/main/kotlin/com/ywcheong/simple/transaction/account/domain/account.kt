@@ -96,7 +96,7 @@ data class Transfer(
     private fun executeImmediateTransfer(): TransferResult {
         val newFromAccount = fromAccount.withdraw(amount)
         val newToAccount = toAccount.deposit(amount)
-        return TransferResult.Complete(newFromAccount, newToAccount)
+        return TransferResult.Complete(newFromAccount, newToAccount, amount, true)
     }
 
     companion object {
@@ -105,18 +105,18 @@ data class Transfer(
 }
 
 sealed class TransferResult {
-    data class Complete(val fromAccount: Account, val toAccount: Account) : TransferResult()
+    data class Complete(val fromAccount: Account, val toAccount: Account, val amount: AccountBalanceChange, val accepted: Boolean) : TransferResult()
     data class Pending(val fromAccount: Account, val toAccount: Account, val amount: AccountBalanceChange) :
         TransferResult() {
         fun approve(): Complete {
             val newFromAccount = fromAccount.release(amount).withdraw(amount)
             val newToAccount = toAccount.deposit(amount)
-            return Complete(newFromAccount, newToAccount)
+            return Complete(newFromAccount, newToAccount, amount, true)
         }
 
         fun reject(): Complete {
             val newFromAccount = fromAccount.release(amount)
-            return Complete(newFromAccount, toAccount)
+            return Complete(newFromAccount, toAccount, amount, false)
         }
     }
 }
