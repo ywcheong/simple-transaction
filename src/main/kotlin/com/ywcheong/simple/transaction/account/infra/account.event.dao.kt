@@ -1,6 +1,7 @@
 package com.ywcheong.simple.transaction.account.infra
 
 import com.ywcheong.simple.transaction.account.domain.*
+import com.ywcheong.simple.transaction.member.domain.MemberId
 import org.seasar.doma.*
 import org.seasar.doma.boot.ConfigAutowireable
 import org.seasar.doma.jdbc.Result
@@ -8,16 +9,18 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Entity(immutable = true)
+@Table(name = "account_event")
 data class AccountEventEntity(
     @Id val id: String,
-    val type: Int,
+    @Column(name = "event_type")  val type: Int,
     val account: String? = null,
     @Column(name = "account_from") val accountFrom: String? = null,
     @Column(name = "account_to") val accountTo: String? = null,
     val amount: Long? = null,
-    @Column(name = "previous_id") val previousId: String? = null,
+    @Column(name = "subsequent_id") val subsequentId: String? = null,
     val reason: String? = null,
     @Column(name = "issued_at") val issuedAt: Date,
+    @Column(name = "issued_by") val issuedBy: String,
 ) {
     // AccountEvent → Entity 생성자
     constructor(event: AccountEvent) : this(
@@ -28,7 +31,8 @@ data class AccountEventEntity(
         accountTo = event.accountTo?.value,
         amount = event.amount?.value,
         reason = event.reason,
-        issuedAt = event.issuedAt
+        issuedAt = event.issuedAt,
+        issuedBy = event.issuedBy.value
     )
 
     // Entity → AccountEvent 변환
@@ -37,14 +41,16 @@ data class AccountEventEntity(
             id = AccountEventId(id),
             issuedAt = issuedAt,
             account = AccountId(requireNotNull(account)),
-            amount = AccountBalanceChange(requireNotNull(amount))
+            amount = AccountBalanceChange(requireNotNull(amount)),
+            issuedBy = MemberId(issuedBy)
         )
 
         AccountEventType.WITHDRAW -> AccountWithdrewEvent(
             id = AccountEventId(id),
             issuedAt = issuedAt,
             account = AccountId(requireNotNull(account)),
-            amount = AccountBalanceChange(requireNotNull(amount))
+            amount = AccountBalanceChange(requireNotNull(amount)),
+            issuedBy = MemberId(issuedBy)
         )
 
         AccountEventType.TRANSFER_ATTEMPT -> AccountTransferAttemptEvent(
@@ -52,26 +58,28 @@ data class AccountEventEntity(
             issuedAt = issuedAt,
             accountFrom = AccountId(requireNotNull(accountFrom)),
             accountTo = AccountId(requireNotNull(accountTo)),
-            amount = AccountBalanceChange(requireNotNull(amount))
+            amount = AccountBalanceChange(requireNotNull(amount)),
+            issuedBy = MemberId(issuedBy),
+            subsequentId = subsequentId?.let { AccountEventId(it) }
         )
 
         AccountEventType.TRANSFER_ACCEPT -> AccountTransferAcceptedEvent(
             id = AccountEventId(id),
-            previousId = AccountEventId(requireNotNull(previousId)),
-            issuedAt = issuedAt,
-            accountFrom = AccountId(requireNotNull(accountFrom)),
-            accountTo = AccountId(requireNotNull(accountTo)),
-            amount = AccountBalanceChange(requireNotNull(amount))
-        )
-
-        AccountEventType.TRANSFER_REJECT -> AccountTransferRejectedEvent(
-            id = AccountEventId(id),
-            previousId = AccountEventId(requireNotNull(previousId)),
             issuedAt = issuedAt,
             accountFrom = AccountId(requireNotNull(accountFrom)),
             accountTo = AccountId(requireNotNull(accountTo)),
             amount = AccountBalanceChange(requireNotNull(amount)),
-            reason = requireNotNull(reason)
+            issuedBy = MemberId(issuedBy)
+        )
+
+        AccountEventType.TRANSFER_REJECT -> AccountTransferRejectedEvent(
+            id = AccountEventId(id),
+            issuedAt = issuedAt,
+            accountFrom = AccountId(requireNotNull(accountFrom)),
+            accountTo = AccountId(requireNotNull(accountTo)),
+            amount = AccountBalanceChange(requireNotNull(amount)),
+            reason = requireNotNull(reason),
+            issuedBy = MemberId(issuedBy)
         )
 
         else -> throw UnexpectedAccountEventTypeException(type)

@@ -13,6 +13,7 @@ class AccountEntity(
     @Id val id: String,
     val owner: String,
     val balance: Long,
+    @Column(name = "pending_balance") val pendingBalance: Long,
     @Version val version: Long,
     @Column(name = "is_withdrew") val isWithdrew: Boolean
 ) {
@@ -20,6 +21,7 @@ class AccountEntity(
         id = account.id.value,
         owner = account.owner.value,
         balance = account.balance.value,
+        pendingBalance = account.pendingBalance.value,
         version = account.version,
         isWithdrew = isWithdrew
     )
@@ -29,7 +31,8 @@ class AccountEntity(
             id = AccountId(id),
             owner = MemberId(owner),
             balance = AccountBalance(balance),
-            version = version
+            pendingBalance = AccountPendingBalance(pendingBalance),
+            version = version,
         )
     }
 }

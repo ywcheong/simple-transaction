@@ -36,6 +36,22 @@ value class AccountBalance(val value: Long) {
 }
 
 @JvmInline
+value class AccountPendingBalance(val value: Long) {
+    init {
+        if (value < 0) throw NegativeBalanceException()
+    }
+
+    internal operator fun plus(change: AccountBalanceChange): AccountPendingBalance = AccountPendingBalance(
+        value + change.value
+    )
+
+    internal operator fun minus(change: AccountBalanceChange): AccountPendingBalance {
+        if (value < change.value) throw UnexpectedPendingBalanceInsufficientException()
+        return AccountPendingBalance(value - change.value)
+    }
+}
+
+@JvmInline
 value class AccountBalanceChange(val value: Long) {
     init {
         if (value <= 0) throw NonPositiveBalanceChangeException()
@@ -43,21 +59,64 @@ value class AccountBalanceChange(val value: Long) {
 }
 
 data class Account(
-    val id: AccountId, val owner: MemberId, val balance: AccountBalance, val version: Long
+    val id: AccountId,
+    val owner: MemberId,
+    val balance: AccountBalance,
+    val pendingBalance: AccountPendingBalance,
+    val version: Long
 ) {
     fun deposit(change: AccountBalanceChange): Account = this.copy(balance = balance + change)
     fun withdraw(change: AccountBalanceChange): Account = this.copy(balance = balance - change)
+
+    fun pend(change: AccountBalanceChange): Account =
+        this.copy(balance = balance - change, pendingBalance = pendingBalance + change)
+
+    fun release(change: AccountBalanceChange): Account =
+        this.copy(balance = balance + change, pendingBalance = pendingBalance - change)
 }
 
 data class Transfer(
     val fromAccount: Account, val toAccount: Account, val amount: AccountBalanceChange
 ) {
-    fun isLargeTransfer(): Boolean = when {
+    private fun isPendingRequired(): Boolean = when {
         fromAccount.owner == toAccount.owner -> false
         else -> amount.value >= LARGE_TRANSFER_THRESHOLD.value
     }
 
+    fun execute(): TransferResult = when (isPendingRequired()) {
+        true -> executePendingTransfer()
+        false -> executeImmediateTransfer()
+    }
+
+    private fun executePendingTransfer(): TransferResult {
+        val newFromAccount = fromAccount.pend(amount)
+        return TransferResult.Pending(newFromAccount, toAccount, amount)
+    }
+
+    private fun executeImmediateTransfer(): TransferResult {
+        val newFromAccount = fromAccount.withdraw(amount)
+        val newToAccount = toAccount.deposit(amount)
+        return TransferResult.Complete(newFromAccount, newToAccount)
+    }
+
     companion object {
         val LARGE_TRANSFER_THRESHOLD = AccountBalanceChange(1_000_000)
+    }
+}
+
+sealed class TransferResult {
+    data class Complete(val fromAccount: Account, val toAccount: Account) : TransferResult()
+    data class Pending(val fromAccount: Account, val toAccount: Account, val amount: AccountBalanceChange) :
+        TransferResult() {
+        fun approve(): Complete {
+            val newFromAccount = fromAccount.release(amount).withdraw(amount)
+            val newToAccount = toAccount.deposit(amount)
+            return Complete(newFromAccount, newToAccount)
+        }
+
+        fun reject(): Complete {
+            val newFromAccount = fromAccount.release(amount)
+            return Complete(newFromAccount, toAccount)
+        }
     }
 }

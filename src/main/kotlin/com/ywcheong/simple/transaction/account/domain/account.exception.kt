@@ -12,7 +12,11 @@ class AccountNotFoundException : AccountException("계좌번호에 해당하는 
 class AccountNotOwnedException : AccountException("계좌의 소유주만 접근 가능합니다.")
 class AccountBalanceNotZeroException : AccountException("계좌에 잔액이 남아 있으면 계좌를 폐쇄할 수 없습니다.")
 
+sealed class AccountEventException(msg: String) : AccountException(msg)
+class AccountTransferEventNotFoundException : AccountEventException("계좌 송금 이벤트 ID를 찾을 수 없습니다.")
+class AccountEventNotTransferException : AccountEventException("계좌 송금 이벤트가 아닙니다.")
+
 sealed class UnexpectAccountException(msg: String) : RuntimeException(msg)
 class UnexpectedAccountRepositoryException : UnexpectAccountException("계좌 저장에 문제가 발생했습니다.")
-class UnexpectedAccountTransferException : UnexpectAccountException("계좌 이체에 문제가 발생했습니다.")
 class UnexpectedAccountEventTypeException(type: Int) : UnexpectAccountException("계좌 이벤트의 타입이 잘못되었습니다. (타입 $type)")
+class UnexpectedPendingBalanceInsufficientException : UnexpectAccountException("계좌의 계류잔고가 부족합니다.")
