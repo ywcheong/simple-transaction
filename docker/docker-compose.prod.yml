@@ -1,10 +1,17 @@
 services:
   st-dbms:
-    ports: !reset [] # 포트 외부 노출 삭제
+    ports: !reset [ ] # 포트 외부 노출 삭제
     expose:
-      - "3306" # 내부 네트워크에만 포트 노출
+      - 3306 # 내부 네트워크에만 포트 노출
+  st-broker:
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://st-broker:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@st-broker:9093
+    ports: !reset [ ]
+    expose:
+      - 9092
   st-obs:
-    ports: !reset ["3000:3000"] # Grafana 대시보드만 노출
+    ports: !reset [ "3000:3000" ] # Grafana 대시보드만 노출
     expose:
       - 4317 # OpenTelemetry gRPC
       - 4318 # OpenTelemetry HTTP
