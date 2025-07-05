@@ -38,13 +38,13 @@ class AccountController(
         )
     }
 
-    @GetMapping("/{accountId}")
-    fun lookupOneAccount(@PathVariable accountId: String): ResponseEntity<LookupOneAccountResponse> {
+    @GetMapping("/{id}")
+    fun lookupOneAccount(@PathVariable id: String): ResponseEntity<LookupOneAccountResponse> {
         // 요청 준비
-        val accountId_ = AccountId(accountId)
+        val accountId = AccountId(id)
 
         // 의존성 조율
-        val account = getAccountWithCheck(accountId_)
+        val account = getAccountWithCheck(accountId)
 
         // 응답 반환
         return ResponseEntity.status(HttpStatus.OK).body(
@@ -71,15 +71,15 @@ class AccountController(
         return ResponseEntity.status(HttpStatus.OK).body(OpenAccountResponse(account.id.value))
     }
 
-    @DeleteMapping("/{accountId}")
-    fun closeExistingAccount(@PathVariable accountId: String): ResponseEntity<Nothing> {
+    @DeleteMapping("/{id}")
+    fun closeExistingAccount(@PathVariable id: String): ResponseEntity<Nothing> {
         // 요청 준비
-        val accountId_ = AccountId(accountId)
+        val accountId = AccountId(id)
 
         // 의존성 조율
         val tx = transactionService.transaction()
         tx.required {
-            val account = getAccountWithCheck(accountId_)
+            val account = getAccountWithCheck(accountId)
             if (account.balance.value > 0) throw AccountBalanceNotZeroException()
             accountRepository.delete(account)
         }
@@ -88,12 +88,12 @@ class AccountController(
         return ResponseEntity.status(HttpStatus.OK).body(null)
     }
 
-    @PostMapping("/{accountId}/deposit")
+    @PostMapping("/{id}/deposit")
     fun executeDeposit(
-        @PathVariable accountId: String, @RequestBody request: DepositRequest
+        @PathVariable id: String, @RequestBody request: DepositRequest
     ): ResponseEntity<DepositResponse> {
         // 요청 준비
-        val accountId_ = AccountId(accountId)
+        val accountId = AccountId(id)
         val depositChange = AccountBalanceChange(request.amount)
 
         // 의존성 조율
@@ -105,24 +105,25 @@ class AccountController(
             val account = getAccountWithCheck(accountId_)
             val updatedAccount = account.deposit(depositChange)
             accountRepository.update(updatedAccount)
+            eventRepository.insert(event)
             updatedBalance = updatedAccount.balance
         }
 
         // 응답 반환
         return ResponseEntity.status(HttpStatus.OK).body(
             DepositResponse(
-                accountId = accountId, newBalance = requireNotNull(updatedBalance).value
+                accountId = id, newBalance = requireNotNull(updatedBalance).value
             )
         )
     }
 
-    @PostMapping("/{accountId}/withdraw")
+    @PostMapping("/{id}/withdraw")
     fun executeWithdraw(
-        @PathVariable accountId: String,
+        @PathVariable id: String,
         @RequestBody request: WithdrawRequest
     ): ResponseEntity<WithdrawResponse> {
         // 요청 준비
-        val accountId_ = AccountId(accountId)
+        val accountId = AccountId(id)
         val depositChange = AccountBalanceChange(request.amount)
 
         // 의존성 조율
@@ -131,7 +132,7 @@ class AccountController(
         val tx = transactionService.transaction()
 
         tx.required {
-            val account = getAccountWithCheck(accountId_)
+            val account = getAccountWithCheck(accountId)
             val updatedAccount = account.withdraw(depositChange)
             accountRepository.update(updatedAccount)
             updatedBalance = updatedAccount.balance
@@ -140,7 +141,7 @@ class AccountController(
         // 응답 반환
         return ResponseEntity.status(HttpStatus.OK).body(
             WithdrawResponse(
-                accountId = accountId, newBalance = requireNotNull(updatedBalance).value
+                accountId = id, newBalance = requireNotNull(updatedBalance).value
             )
         )
     }
