@@ -1,9 +1,10 @@
 package com.ywcheong.simple.transaction.account.domain
 
+import com.ywcheong.simple.transaction.member.domain.MemberId
 import java.util.*
 
 @JvmInline
-value class AccountEventId(val value: String){
+value class AccountEventId(val value: String) {
     companion object {
         fun createUnique(): AccountEventId = AccountEventId(UUID.randomUUID().toString())
     }
@@ -28,77 +29,83 @@ value class AccountEventType(val type: Int) {
 interface AccountEvent {
     val id: AccountEventId
     val issuedAt: Date
+    val issuedBy: MemberId
     val type: AccountEventType
 
     val account: AccountId?
     val accountFrom: AccountId?
     val accountTo: AccountId?
     val amount: AccountBalanceChange?
-    val previousId: AccountEventId?
+    val subsequentId: AccountEventId?
     val reason: String?
 }
 
 data class AccountDepositedEvent(
     override val id: AccountEventId,
     override val issuedAt: Date,
+    override val issuedBy: MemberId,
     override val account: AccountId,
     override val amount: AccountBalanceChange,
 ) : AccountEvent {
     override val type = AccountEventType.DEPOSIT
     override val accountFrom: AccountId? = null
     override val accountTo: AccountId? = null
-    override val previousId: AccountEventId? = null
+    override val subsequentId: AccountEventId? = null
     override val reason: String? = null
 }
 
 data class AccountWithdrewEvent(
     override val id: AccountEventId,
     override val issuedAt: Date,
+    override val issuedBy: MemberId,
     override val account: AccountId,
     override val amount: AccountBalanceChange,
 ) : AccountEvent {
     override val type = AccountEventType.WITHDRAW
     override val accountFrom: AccountId? = null
     override val accountTo: AccountId? = null
-    override val previousId: AccountEventId? = null
+    override val subsequentId: AccountEventId? = null
     override val reason: String? = null
 }
 
 data class AccountTransferAttemptEvent(
     override val id: AccountEventId,
     override val issuedAt: Date,
+    override val issuedBy: MemberId,
     override val accountFrom: AccountId,
     override val accountTo: AccountId,
     override val amount: AccountBalanceChange,
+    override val subsequentId: AccountEventId?
 ) : AccountEvent {
     override val type = AccountEventType.TRANSFER_ATTEMPT
     override val account: AccountId? = null
-    override val previousId: AccountEventId? = null
     override val reason: String? = null
 }
 
 data class AccountTransferAcceptedEvent(
     override val id: AccountEventId,
-    override val previousId: AccountEventId?,
     override val issuedAt: Date,
+    override val issuedBy: MemberId,
     override val accountFrom: AccountId,
     override val accountTo: AccountId,
     override val amount: AccountBalanceChange,
 ) : AccountEvent {
     override val type = AccountEventType.TRANSFER_ACCEPT
     override val account: AccountId? = null
+    override val subsequentId: AccountEventId? = null
     override val reason: String? = null
 }
 
 data class AccountTransferRejectedEvent(
     override val id: AccountEventId,
-    override val previousId: AccountEventId,
     override val issuedAt: Date,
+    override val issuedBy: MemberId,
     override val accountFrom: AccountId,
     override val accountTo: AccountId,
     override val amount: AccountBalanceChange,
     override val reason: String,
 ) : AccountEvent {
     override val type = AccountEventType.TRANSFER_REJECT
+    override val subsequentId: AccountEventId? = null
     override val account: AccountId? = null
 }
