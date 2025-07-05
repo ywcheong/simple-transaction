@@ -6,6 +6,7 @@ import com.ywcheong.simple.transaction.common.service.TransactionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 data class DepositRequest(val amount: Long)
 data class WithdrawRequest(val amount: Long)
@@ -21,7 +22,8 @@ data class OpenAccountResponse(val accountId: String)
 class AccountController(
     private val principalService: PrincipalService,
     private val transactionService: TransactionService,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
+    private val eventRepository: AccountEventRepository
 ) {
     @GetMapping("/")
     fun lookupEveryAccounts(): ResponseEntity<LookupEveryAccountsResponse> {
@@ -96,13 +98,17 @@ class AccountController(
         val accountId = AccountId(id)
         val depositChange = AccountBalanceChange(request.amount)
 
+        val event = AccountDepositedEvent(
+            id = AccountEventId.createUnique(), issuedAt = Date(), account = accountId, amount = depositChange
+        )
+
         // 의존성 조율
         // TODO 멱등성
         var updatedBalance: AccountBalance? = null
         val tx = transactionService.transaction()
 
         tx.required {
-            val account = getAccountWithCheck(accountId_)
+            val account = getAccountWithCheck(accountId)
             val updatedAccount = account.deposit(depositChange)
             accountRepository.update(updatedAccount)
             eventRepository.insert(event)
@@ -119,12 +125,15 @@ class AccountController(
 
     @PostMapping("/{id}/withdraw")
     fun executeWithdraw(
-        @PathVariable id: String,
-        @RequestBody request: WithdrawRequest
+        @PathVariable id: String, @RequestBody request: WithdrawRequest
     ): ResponseEntity<WithdrawResponse> {
         // 요청 준비
         val accountId = AccountId(id)
-        val depositChange = AccountBalanceChange(request.amount)
+        val withdrawChange = AccountBalanceChange(request.amount)
+
+        val event = AccountWithdrewEvent(
+            id = AccountEventId.createUnique(), issuedAt = Date(), account = accountId, amount = withdrawChange
+        )
 
         // 의존성 조율
         // TODO 멱등성
@@ -133,8 +142,9 @@ class AccountController(
 
         tx.required {
             val account = getAccountWithCheck(accountId)
-            val updatedAccount = account.withdraw(depositChange)
+            val updatedAccount = account.withdraw(withdrawChange)
             accountRepository.update(updatedAccount)
+            eventRepository.insert(event)
             updatedBalance = updatedAccount.balance
         }
 
@@ -155,24 +165,30 @@ class AccountController(
 }
 
 data class TransferRequest(val from: String, val to: String, val amount: Long)
-data class ProcessLargeTransferRequest(val isAccepted: Boolean, val reasonRejected: String? = null)
+data class TransferResponse(val eventId: String, val delayed: Boolean)
+
+data class CheckTransferRequest(val isAccepted: Boolean, val reasonRejected: String? = null)
 
 @RestController
 @RequestMapping("/transfers")
 class TransferController(
     private val principalService: PrincipalService,
     private val transactionService: TransactionService,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
+    private val eventRepository: AccountEventRepository,
 ) {
     @PostMapping("/")
-    fun executeTransfer(@RequestBody request: TransferRequest): ResponseEntity<Nothing> = with(request) {
+    fun executeTransfer(@RequestBody request: TransferRequest): ResponseEntity<TransferResponse> = with(request) {
         // 요청 준비
         val fromAccountId = AccountId(from)
         val toAccountId = AccountId(to)
         val balanceChange = AccountBalanceChange(amount)
 
         // 의존성 조율
+        // TODO 멱등성
+
         val tx = transactionService.transaction()
+        var response: TransferResponse? = null
         tx.required {
             // 송금자와 수금자를 로드합니다. 이때 송금자는 지금 로그인한 사람임을 검증합니다.
             val fromAccount = accountRepository.findAccountById(fromAccountId) ?: throw AccountNotFoundException()
@@ -180,21 +196,72 @@ class TransferController(
             if (fromAccount.owner != currentUser) throw AccountNotOwnedException()
             val toAccount = accountRepository.findAccountById(toAccountId) ?: throw AccountNotFoundException()
 
-            // 이체를 실행합니다. 트랜잭션 및 낙관 락으로 일관성을 보장합니다.
-            val updatedFromAccount = fromAccount.withdraw(balanceChange)
-            val updatedToAccount = toAccount.deposit(balanceChange)
+            val transfer = Transfer(
+                fromAccount = fromAccount, toAccount = toAccount, amount = balanceChange
+            )
 
-            // 영속성에 반영합니다.
-            accountRepository.update(updatedFromAccount)
-            accountRepository.update(updatedToAccount)
+            // 고액 송금인지 판정한 뒤, 이체를 실행합니다.
+            // 트랜잭션 및 낙관 락으로 일관성을 보장합니다.
+            if (transfer.isLargeTransfer()) {
+                val eventId = executeDelayedTransfer(transfer)
+                response = TransferResponse(
+                    eventId = eventId.value, delayed = true
+                )
+            } else {
+                val eventId = executeImmediateTransfer(transfer)
+                response = TransferResponse(
+                    eventId = eventId.value, delayed = false
+                )
+            }
         }
 
         // 응답 반환
-        ResponseEntity.status(HttpStatus.OK).body(null)
+        if (response == null) {
+            throw UnexpectedAccountTransferException()
+        }
+
+        if (response!!.delayed) {
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(response)
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(response)
+        }
     }
 
-    @PostMapping("/{transferEventId}")
-    fun processLargeTransfer(@PathVariable transferEventId: String, @RequestBody request: ProcessLargeTransferRequest) {
+    fun executeImmediateTransfer(transfer: Transfer): AccountEventId = with(transfer) {
+        val newFromAccount = fromAccount.withdraw(amount)
+        val newToAccount = toAccount.deposit(amount)
+
+        val event = AccountTransferAcceptedEvent(
+            id = AccountEventId.createUnique(),
+            previousId = null,
+            issuedAt = Date(),
+            accountFrom = fromAccount.id,
+            accountTo = toAccount.id,
+            amount = amount
+        )
+
+        accountRepository.update(newFromAccount)
+        accountRepository.update(newToAccount)
+        eventRepository.insert(event)
+
+        event.id
+    }
+
+    fun executeDelayedTransfer(transfer: Transfer): AccountEventId = with(transfer) {
+        val event = AccountTransferAttemptEvent(
+            id = AccountEventId.createUnique(),
+            issuedAt = Date(),
+            accountFrom = fromAccount.id,
+            accountTo = toAccount.id,
+            amount = amount,
+        )
+
+        eventRepository.insert(event)
+        event.id
+    }
+
+    @GetMapping("/{eventId}")
+    fun checkTransfer(@PathVariable transferEventId: String, @RequestBody request: CheckTransferRequest) {
         // 요청 준비
 
         // 의존성 조율

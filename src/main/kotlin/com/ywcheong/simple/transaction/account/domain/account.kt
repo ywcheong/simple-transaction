@@ -48,3 +48,16 @@ data class Account(
     fun deposit(change: AccountBalanceChange): Account = this.copy(balance = balance + change)
     fun withdraw(change: AccountBalanceChange): Account = this.copy(balance = balance - change)
 }
+
+data class Transfer(
+    val fromAccount: Account, val toAccount: Account, val amount: AccountBalanceChange
+) {
+    fun isLargeTransfer(): Boolean = when {
+        fromAccount.owner == toAccount.owner -> false
+        else -> amount.value >= LARGE_TRANSFER_THRESHOLD.value
+    }
+
+    companion object {
+        val LARGE_TRANSFER_THRESHOLD = AccountBalanceChange(1_000_000)
+    }
+}

@@ -3,7 +3,11 @@ package com.ywcheong.simple.transaction.account.domain
 import java.util.*
 
 @JvmInline
-value class AccountEventId(val value: String)
+value class AccountEventId(val value: String){
+    companion object {
+        fun createUnique(): AccountEventId = AccountEventId(UUID.randomUUID().toString())
+    }
+}
 
 @JvmInline
 value class AccountEventType(val type: Int) {
@@ -75,7 +79,7 @@ data class AccountTransferAttemptEvent(
 
 data class AccountTransferAcceptedEvent(
     override val id: AccountEventId,
-    override val previousId: AccountEventId,
+    override val previousId: AccountEventId?,
     override val issuedAt: Date,
     override val accountFrom: AccountId,
     override val accountTo: AccountId,
