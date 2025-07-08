@@ -12,7 +12,7 @@ import java.util.*
 @Table(name = "account_event")
 data class AccountEventEntity(
     @Id val id: String,
-    @Column(name = "event_type")  val type: Int,
+    @Column(name = "event_type") val type: Int,
     val account: String? = null,
     @Column(name = "account_from") val accountFrom: String? = null,
     @Column(name = "account_to") val accountTo: String? = null,
@@ -21,9 +21,10 @@ data class AccountEventEntity(
     val reason: String? = null,
     @Column(name = "issued_at") val issuedAt: Date,
     @Column(name = "issued_by") val issuedBy: String,
+    @Column(name = "published_at") val publishedAt: Date?
 ) {
     // AccountEvent → Entity 생성자
-    constructor(event: AccountEvent) : this(
+    constructor(event: AccountEvent, publishedAt: Date? = null) : this(
         id = event.id.value,
         type = event.type.type,
         account = event.account?.value,
@@ -32,7 +33,8 @@ data class AccountEventEntity(
         amount = event.amount?.value,
         reason = event.reason,
         issuedAt = event.issuedAt,
-        issuedBy = event.issuedBy.value
+        issuedBy = event.issuedBy.value,
+        publishedAt = publishedAt
     )
 
     // Entity → AccountEvent 변환
@@ -60,8 +62,7 @@ data class AccountEventEntity(
             accountTo = AccountId(requireNotNull(accountTo)),
             amount = AccountBalanceChange(requireNotNull(amount)),
             issuedBy = MemberId(issuedBy),
-            subsequentId = subsequentId?.let { AccountEventId(it) }
-        )
+            subsequentId = subsequentId?.let { AccountEventId(it) })
 
         AccountEventType.TRANSFER_ACCEPT -> AccountTransferAcceptedEvent(
             id = AccountEventId(id),
@@ -103,6 +104,22 @@ interface AccountEventDao {
     )
     fun findById(id: String): AccountEventEntity?
 
+    @Select
+    @Sql(
+        """
+        SELECT
+            *
+        FROM
+            account_event
+        WHERE
+            published_at IS NULL
+        """
+    )
+    fun findNotPublished(): List<AccountEventEntity>
+
+    @BatchUpdate
+    fun updateBatch(events: List<AccountEventEntity>)
+
     @Insert
     fun insert(event: AccountEventEntity): Result<AccountEventEntity>
 }
@@ -113,4 +130,15 @@ class DefaultAccountEventRepository(
 ) : AccountEventRepository {
     override fun findById(eventId: AccountEventId): AccountEvent? = dao.findById(eventId.value)?.toAccountEvent()
     override fun insert(event: AccountEvent): Boolean = dao.insert(AccountEventEntity(event)).count == 1
+}
+
+@Repository
+class DefaultAccountEventOutboxRepository(
+    private val dao: AccountEventDao
+) : AccountEventOutboxRepository {
+    override fun findNotPublished(): List<AccountEvent> = dao.findNotPublished().map { it.toAccountEvent() }
+    override fun markAsPublished(events: List<AccountEvent>) {
+        val now = Date()
+        dao.updateBatch(events.map { AccountEventEntity(it, now) })
+    }
 }

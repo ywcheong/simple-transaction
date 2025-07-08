@@ -35,6 +35,7 @@ CREATE TABLE account_event
     reason        VARCHAR(255),
     issued_at     DATETIME    NOT NULL,
     issued_by     VARCHAR(64) NOT NULL,
+    published_at  DATETIME,
     INDEX idx_account (account),
     INDEX idx_account_from (account_from),
     INDEX idx_account_to (account_to),
