@@ -29,6 +29,7 @@ services:
     volumes:
       - grafana_data:/data/grafana
       - prometheus_data:/data/prometheus
+      - ./prometheus-init/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - loki_data:/data/loki
     env_file:
       - ../env/obs.base.env
