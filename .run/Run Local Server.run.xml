@@ -4,9 +4,6 @@
       <option value="$PROJECT_DIR$/env/server.dev.env" />
     </option>
     <module name="transaction.main" />
-    <selectedOptions>
-      <option name="environmentVariables" />
-    </selectedOptions>
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.ywcheong.simple.transaction.SimpleTransactionApplicationKt" />
     <option name="VM_PARAMETERS" value="-javaagent:$ProjectFileDir$/libs/opentelemetry-javaagent.jar" />
     <extension name="net.ashald.envfile">
