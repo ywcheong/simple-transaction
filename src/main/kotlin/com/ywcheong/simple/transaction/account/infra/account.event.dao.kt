@@ -4,6 +4,7 @@ import com.ywcheong.simple.transaction.account.domain.*
 import com.ywcheong.simple.transaction.member.domain.MemberId
 import org.seasar.doma.*
 import org.seasar.doma.boot.ConfigAutowireable
+import org.seasar.doma.jdbc.BatchResult
 import org.seasar.doma.jdbc.Result
 import org.springframework.stereotype.Repository
 import java.util.*
@@ -118,7 +119,7 @@ interface AccountEventDao {
     fun findNotPublished(): List<AccountEventEntity>
 
     @BatchUpdate
-    fun updateBatch(events: List<AccountEventEntity>)
+    fun updateBatch(events: List<AccountEventEntity>): BatchResult<AccountEventEntity>
 
     @Insert
     fun insert(event: AccountEventEntity): Result<AccountEventEntity>

@@ -1,0 +1,26 @@
+services:
+  locust-master:
+    image: locustio/locust:latest
+    container_name: stress-master
+    environment:
+      - LOCUST_MODE=master
+    volumes:
+      - ./locustfile.py:/home/locust/locustfile.py:ro
+    network_mode: host
+    command: >
+      -f /home/locust/locustfile.py
+      --host=http://localhost:8080
+
+  locust-worker:
+    image: locustio/locust:latest
+    depends_on:
+      - locust-master
+    environment:
+      - LOCUST_MODE=worker
+    volumes:
+      - ./locustfile.py:/home/locust/locustfile.py:ro
+    network_mode: host
+    command: >
+      -f /home/locust/locustfile.py
+      --worker
+      --master-host=localhost
