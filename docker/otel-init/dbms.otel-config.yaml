@@ -1,0 +1,27 @@
+receivers:
+  mysql:
+    endpoint: st-dbms:3306
+    username: streceiver
+    allow_native_passwords: true
+    collection_interval: 10s
+
+processors:
+  batch: { }
+  resource:
+    attributes:
+      - key: service.name
+        value: st-dbms
+        action: upsert
+
+exporters:
+  otlp:
+    endpoint: st-obs:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    metrics:
+      receivers: [ mysql ]
+      processors: [ resource, batch ]
+      exporters: [ otlp ]
