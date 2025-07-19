@@ -101,40 +101,38 @@ flowchart TD
     FrontendServer["대고객 프론트엔드 서버"]
     AccountBackendServer["계좌 백엔드 서버"]
     MonitoringBackendServer["모니터링 백엔드 서버"]
-
 %% 영속성 유닛
     MemberDB[("회원 DB")]
     MessageBroker[/"메시지 큐"/]
     AccountDB[("계좌 DB")]
     MonitoringDB[("모니터링 DB")]
-
-    AccountBackendServer -- "계좌 데이터 영속성" --> AccountDB
+    AccountBackendServer -- " 계좌 데이터 영속성 " --> AccountDB
     MonitoringFrontendServer["모니터링 프론트엔드 서버"]
-
 %% 대고객 UI와 서비스 연결
-    FrontendServer -- "UI 요청" --> MemberBackendServer
-    FrontendServer -- "UI 요청" --> AccountBackendServer
-
+    FrontendServer -- " UI 요청 " --> MemberBackendServer
+    FrontendServer -- " UI 요청 " --> AccountBackendServer
 %% 백엔드와 DB 연결
-    MemberBackendServer -- "회원 데이터 영속성" --> MemberDB
-
+    MemberBackendServer -- " 회원 데이터 영속성 " --> MemberDB
 %% 이벤트 메시지 흐름
-    MemberBackendServer -- "이벤트 생산" --> MessageBroker
-    AccountBackendServer -- "이벤트 생산" --> MessageBroker
-    MessageBroker -- "이벤트 소모" --> MonitoringBackendServer
-
+    MemberBackendServer -- " 이벤트 생산 " --> MessageBroker
+    AccountBackendServer -- " 이벤트 생산 " --> MessageBroker
+    MessageBroker -- " 이벤트 소모 " --> MonitoringBackendServer
 %% 모니터링 UI와 서비스 연결
-    MonitoringFrontendServer -- "UI 요청" --> MonitoringBackendServer
-
+    MonitoringFrontendServer -- " UI 요청 " --> MonitoringBackendServer
 %% 모니터링 DB 연결
-    MonitoringBackendServer -- "모니터링 데이터 영속성" --> MonitoringDB
-
+    MonitoringBackendServer -- " 모니터링 데이터 영속성 " --> MonitoringDB
 %% 스타일 및 클래스 지정
-    classDef server fill:#fffde7,stroke:#fbc02d,stroke-width:2px;
-    class FrontendServer,MemberBackendServer,AccountBackendServer,MonitoringBackendServer,MonitoringFrontendServer server;
-
-    classDef storage fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
-    class MemberDB,AccountDB,MonitoringDB,MessageBroker storage;
+    classDef server fill: #fffde7, stroke: #fbc02d, stroke-width: 2px;
+    class FrontendServer server;
+    class MemberBackendServer server;
+    class AccountBackendServer server;
+    class MonitoringBackendServer server;
+    class MonitoringFrontendServer server;
+    classDef storage fill: #e3f2fd, stroke: #1565c0, stroke-width: 2px;
+    class MemberDB storage;
+    class AccountDB storage;
+    class MonitoringDB storage;
+    class MessageBroker storage;
 
 ```
 
@@ -154,11 +152,10 @@ flowchart TD
         MemberDB[("회원 DB")]
         MemberOutboxService["회원 아웃박스 서비스"]
         MemberOutboxDB[("회원 아웃박스 DB")]
-
-        MemberUI -- "API" --> MemberService
-        MemberService -- "회원 관리" --> MemberDB
-        MemberService -- "이벤트 기록" --> MemberOutboxDB
-        MemberOutboxDB -- "이벤트 획득" --> MemberOutboxService
+        MemberUI -- " API " --> MemberService
+        MemberService -- " 회원 관리 " --> MemberDB
+        MemberService -- " 이벤트 기록 " --> MemberOutboxDB
+        MemberOutboxDB -- " 이벤트 획득 " --> MemberOutboxService
     end
 
 %% Account Backend
@@ -167,11 +164,10 @@ flowchart TD
         AccountDB[("계좌 DB")]
         AccountOutboxService["계좌 아웃박스 서비스"]
         AccountOutboxDB[("계좌 아웃박스 DB")]
-
-        AccountUI -- "API" --> AccountService
-        AccountService -- "계좌 관리" --> AccountDB
-        AccountService -- "이벤트 기록" --> AccountOutboxDB
-        AccountOutboxDB -- "이벤트 획득" --> AccountOutboxService
+        AccountUI -- " API " --> AccountService
+        AccountService -- " 계좌 관리 " --> AccountDB
+        AccountService -- " 이벤트 기록 " --> AccountOutboxDB
+        AccountOutboxDB -- " 이벤트 획득 " --> AccountOutboxService
     end
 
 %% 메시지 브로커
@@ -184,26 +180,42 @@ flowchart TD
         MonitoringConsumer["모니터링 이벤트 소비자"]
         MonitoringService["모니터링 서비스"]
         MonitoringDB[("모니터링 DB")]
-
-        MonitoringConsumer -- "이벤트 기록" --> MonitoringDB
-        MonitoringService -- "모니터링 활동" --> MonitoringDB
+        MonitoringConsumer -- " 이벤트 기록 " --> MonitoringDB
+        MonitoringService -- " 모니터링 활동 " --> MonitoringDB
     end
 
 %% Monitoring Frontend
     subgraph MonitoringFrontendServer["모니터링 프론트엔드 서버"]
         MonitoringUI["모니터링 UI"]
-        MonitoringUI -- "UI" --> MonitoringService
+        MonitoringUI -- " UI " --> MonitoringService
     end
 
 %% 스타일 및 클래스 지정
-    classDef server fill:#fffde7,stroke:#fbc02d,stroke-width:2px;
-    class CustomerFrontendServer,MemberBackendServer,AccountBackendServer,MonitoringBackendServer,MonitoringFrontendServer server;
-
-    classDef storage fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
-    class MessageBroker,MemberDB,AccountDB,MemberOutboxDB,AccountOutboxDB,MonitoringDB storage;
-
-    classDef component fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
-    class MemberUI,AccountUI,MonitoringUI,MemberFrontendService,AccountFrontendService,MemberService,AccountService,MemberOutboxService,AccountOutboxService,MonitoringConsumer,MonitoringService component;
+    classDef server fill: #fffde7, stroke: #fbc02d, stroke-width: 2px;
+    class CustomerFrontendServer server;
+    class MemberBackendServer server;
+    class AccountBackendServer server;
+    class MonitoringBackendServer server;
+    class MonitoringFrontendServer server;
+    classDef storage fill: #e3f2fd, stroke: #1565c0, stroke-width: 2px;
+    class MessageBroker storage;
+    class MemberDB storage;
+    class AccountDB storage;
+    class MemberOutboxDB storage;
+    class AccountOutboxDB storage;
+    class MonitoringDB storage;
+    classDef component fill: #ffe0b2, stroke: #ef6c00, stroke-width: 2px;
+    class MemberUI component;
+    class AccountUI component;
+    class MonitoringUI component;
+    class MemberFrontendService component;
+    class AccountFrontendService component;
+    class MemberService component;
+    class AccountService component;
+    class MemberOutboxService component;
+    class AccountOutboxService component;
+    class MonitoringConsumer component;
+    class MonitoringService component;
 
 ```
 
