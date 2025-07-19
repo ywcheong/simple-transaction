@@ -330,7 +330,7 @@ class AccountIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `고액 송금은 타인에게 보낼 때 계류된다`() {
+    fun `고액 송금은 타인에게 보낼 때 보류된다`() {
         // 회원 가입 및 로그인
         val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
         val tokenB = registerAndLogin(userBId, userBName, userBPassword, userBPhone)

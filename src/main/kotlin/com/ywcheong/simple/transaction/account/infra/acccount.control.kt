@@ -62,7 +62,7 @@ class AccountController(
 
     @Operation(
         summary = "계좌 상세 조회",
-        description = "계좌 ID로 단일 계좌의 잔액과 계류 잔액을 조회합니다. 본인 소유 계좌만 조회 가능합니다.",
+        description = "계좌 ID로 단일 계좌의 잔액과 보류 잔액을 조회합니다. 본인 소유 계좌만 조회 가능합니다.",
         security = [SecurityRequirement(name = "bearer-key")],
         parameters = [Parameter(name = "id", description = "계좌 ID (UUID4)", required = true, `in` = ParameterIn.PATH)],
         responses = [ApiResponse(

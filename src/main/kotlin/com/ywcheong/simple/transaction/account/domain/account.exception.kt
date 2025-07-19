@@ -19,4 +19,4 @@ class AccountEventNotTransferException : AccountEventException("계좌 송금 �
 sealed class UnexpectAccountException(msg: String) : RuntimeException(msg)
 class UnexpectedAccountRepositoryException : UnexpectAccountException("계좌 저장에 문제가 발생했습니다.")
 class UnexpectedAccountEventTypeException(type: Int) : UnexpectAccountException("계좌 이벤트의 타입이 잘못되었습니다. (타입 $type)")
-class UnexpectedPendingBalanceInsufficientException : UnexpectAccountException("계좌의 계류잔고가 부족합니다.")
+class UnexpectedPendingBalanceInsufficientException : UnexpectAccountException("계좌의 보류잔고가 부족합니다.")

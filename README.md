@@ -36,7 +36,10 @@
     - 회원은 계좌를 개설하거나 폐쇄할 수 있다.
     - 회원은 계좌에 입금하거나 출금할 수 있다.
     - 회원은 보유한 계좌의 목록을 조회할 수 있다.
-    - 회원은 한 계좌의 상세 정보(잔액, 거래기록)을 조회할 수 있다.
+    - 회원은 한 계좌의 상세 정보를 조회할 수 있다.
+        - 회원은 자신이 보유한 모든 계좌를 조회할 수 있다.
+        - 회원은 한 계좌의 잔액과 보류잔액을 조회할 수 있다.
+        - 회원은 한 계좌의 모든 거래기록을 조회할 수 있다.
     - 회원은 다른 계좌로 송금할 수 있다.
         - 고액송금은 시스템 관리자가 이를 직접 승인하기 전까지는 보류된다.
 - 모니터링
@@ -71,14 +74,14 @@
     - 폐쇄(Close)
     - 조회(Lookup)
         - 잔고~ (Balance~)
-          - 계류잔고 (Pending Balance~)
+            - 보류잔고 (Pending Balance~)
         - 거래기록~ (TransactionHistory~)
     - 실행(Execute)
     - 입금(Deposit)
     - 출금(Withdraw)
     - 송금(Transfer)
         - 고액~ (Large~)
-        - 계류 (Pending)
+        - 보류 (Pending)
         - 즉시 (Immediate)
 - 모니터링 도메인 (Monitoring)
     - 모니터링 관리자 (Monitoring Admin)
@@ -173,11 +176,9 @@ flowchart TD
 
 %% 메시지 브로커
     MessageBroker[/"메시지 브로커"/]
-    MessageBroker -- "이벤트 수신" --> MonitoringConsumer
-
-    MemberOutboxService -- "이벤트 전송" --> MessageBroker
-    AccountOutboxService -- "이벤트 전송" --> MessageBroker
-
+    MessageBroker -- " 이벤트 수신 " --> MonitoringConsumer
+    MemberOutboxService -- " 이벤트 전송 " --> MessageBroker
+    AccountOutboxService -- " 이벤트 전송 " --> MessageBroker
 %% Monitoring Backend
     subgraph MonitoringBackendServer["모니터링 백엔드 서버"]
         MonitoringConsumer["모니터링 이벤트 소비자"]

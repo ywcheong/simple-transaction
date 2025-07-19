@@ -115,7 +115,7 @@ class AccountBalanceTest {
     }
 
     @Test
-    fun `송금대기 설정 시 잔고는 감소하고 계류잔고는 증가한다`() {
+    fun `송금대기 설정 시 잔고는 감소하고 보류잔고는 증가한다`() {
         val account = Account(
             id = AccountId.createUnique(),
             owner = MemberId("abcdef"),
@@ -131,7 +131,7 @@ class AccountBalanceTest {
     }
 
     @Test
-    fun `송금대기 해제 시 잔고는 증가하고 계류잔고는 감소한다`() {
+    fun `송금대기 해제 시 잔고는 증가하고 보류잔고는 감소한다`() {
         val account = Account(
             id = AccountId.createUnique(),
             owner = MemberId("abcdef"),
@@ -147,7 +147,7 @@ class AccountBalanceTest {
     }
 
     @Test
-    fun `송금대기 해제 시 현재 계류잔고보다 많은 금액을 계류해제할 수 없다`() {
+    fun `송금대기 해제 시 현재 보류잔고보다 많은 금액을 보류해제할 수 없다`() {
         val account = Account(
             id = AccountId.createUnique(),
             owner = MemberId("abcdef"),
@@ -213,7 +213,7 @@ class TransferTest {
     }
 
     @Test
-    fun `다른 소유주에게 100만원 이상 송금은 고액송금으로 계류된다`() {
+    fun `다른 소유주에게 100만원 이상 송금은 고액송금으로 보류된다`() {
         val fromOwner = MemberId("ffffff")
         val toOwner = MemberId("tttttt")
         val fromAccount =
