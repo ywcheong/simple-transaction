@@ -43,10 +43,3 @@ CREATE TABLE account_event
     INDEX idx_issued_at (issued_at),
     INDEX idx_subsequent_id (subsequent_id)
 );
-
--- 애플리케이션에 권한 부여
-use stdb;
-GRANT SELECT, INSERT, UPDATE, DELETE ON member TO 'stserver'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON account TO 'stserver'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON account_event TO 'stserver'@'%';
-FLUSH PRIVILEGES;
