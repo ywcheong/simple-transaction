@@ -1,4 +1,11 @@
 #!/bin/bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if [[ $PWD != "$SCRIPT_DIR" ]]; then
+    echo "executing context: $SCRIPT_DIR"
+    cd "$SCRIPT_DIR"
+fi
 
 BASE_COMPOSE_FILE="./docker/docker-compose.base.yml"
 PROD_COMPOSE_FILE="./docker/docker-compose.prod.yml"
@@ -41,6 +48,7 @@ esac
 case "$2" in
   start)
     echo "Starting Docker Compose services..."
+    ./secret/create-secret-mysql-obs-yaml.sh
     docker compose $COMPOSE_FILE_OPTION up -d --build
     if [ $? -ne 0 ]; then
         sleep 1s

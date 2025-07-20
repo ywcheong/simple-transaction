@@ -18,6 +18,7 @@ services:
     secrets:
       - secret_mysql_root_password
       - secret_mysql_app_password
+      - secret_mysql_metric_password
     ports:
       - "3306:3306"
     networks:
@@ -61,12 +62,27 @@ services:
     networks:
       - st-bridge
 
+  st-dbms-obs:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: st-dbms-obs-otel
+    entrypoint: /otelcol-contrib --config=/etc/otel-config.yaml --config=/run/secrets/secret_mysql_metric_password_yaml
+    volumes:
+      - ./otel-init/dbms.otel-config.yaml:/etc/otel-config.yaml:ro
+    secrets:
+      - secret_mysql_metric_password_yaml
+    depends_on:
+      - st-dbms
+      - st-obs
+    networks:
+      - st-bridge
+
   st-init:
     image: alpine
     container_name: st-infra-init
-    entrypoint: [ "ls" ] # Nothing to do right now
+    entrypoint: [ "echo", "inited" ]
     depends_on:
       - st-dbms
+      - st-dbms-obs
       - st-obs
     networks:
       - st-bridge
@@ -86,6 +102,10 @@ secrets:
     file: ../secret/secret_mysql_root_password
   secret_mysql_app_password:
     file: ../secret/secret_mysql_app_password
+  secret_mysql_metric_password:
+    file: ../secret/secret_mysql_metric_password
+  secret_mysql_metric_password_yaml:
+    file: ../secret/secret_mysql_metric_password_yaml
   secret_server_jwt_pubkey:
     file: ../secret/secret_server_jwt_pubkey
   secret_server_jwt_prvkey:
