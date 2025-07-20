@@ -54,16 +54,24 @@
 	- 회원은 계좌를 개설하거나 폐쇄할 수 있다.
 	- 회원은 텔러의 중개를 통해 계좌에 현찰을 입금하거나 출금할 수 있다.
 		- 입금과 출금을 중개할 수 있는 텔러는 모든 자동 텔러와 "회원: 입출금" 권한을 가진 텔러이다.
+		- 모든 입금과 출금은 이를 중개할 수 있는 텔러가 보증해야 한다.
 	- 회원은 보유한 계좌의 목록과 각 계좌의 잔액, 보류잔액, 거래기록을 조회할 수 있다.
 	- 회원은 다른 계좌로 송금할 수 있다.
-		- 고액송금은 "모니터링: 고액송금" 권한을 가진 텔러가 이를 직접 승인하기 전까지는 보류된다.
-		- 보류된 송금의 액수에 해당하는 만큼의 계좌 잔액은 보류 잔액으로 묶이며, 송금이 승인되거나 거부될 때까지 유지된다.
+		- 의심스러운 송금 이외의 송금은 즉시 완료 처리되며, 의심스러운 송금은 지연 처리된다.
+		- 의심스러운 송금의 조건은 다음과 같다.
+			- 한 번에 고액을 송금한다.
+			- 짧은 시간에 여러 번 송금한다.
+			- 개설된 지 얼마 되지 않은 계좌로 송금한다.
+			- 오랫동안 사용되지 않은 계좌로 송금한다.
+		- 지연된 송금의 액수에 해당하는 만큼의 계좌 잔액은 보류 잔액으로 처리되어 계좌의 일반 잔액과는 구분된다.
+			- 보류 잔액은 지연된 송금이 완료되기 전까지 어디로도 이동하거나 입출금될 수 없다.
+		- 지연 처리된 송금은 "모니터링: 지연 송금" 권한을 가진 텔러가 이를 직접 승인하거나 거부하면 완료된다.
 - 모니터링
-	- 특정 권한을 가진 텔러는 시스템의 모든 이벤트를 실시간으로 조회할 수 있어야 한다.
+	- 적절한 권한을 가진 텔러는 시스템의 다양한 이벤트를 실시간으로 조회할 수 있어야 한다.
 		- "모니터링: 회원" 권한을 가진 텔러는 회원 관리 이벤트를 조회할 수 있다.
 		- "모니터링: 계좌" 권한을 가진 텔러는 계좌 이벤트를 조회할 수 있다.
 		- "모니터링: 텔러" 권한을 가진 텔러는 텔러 이벤트를 조회할 수 있다.
-		- "모니터링: 고액송금" 권한을 가진 텔러는 고액송금 요청을 확인하고, 이를 직접 승인하거나 거부할 수 있다.
+		- "모니터링: 지연 송금" 권한을 가진 텔러는 지연된 송금 요청을 확인하고, 이를 직접 승인하거나 거부할 수 있다.
 
 ### 2.2. 도메인 식별
 
@@ -82,6 +90,23 @@
 
 ### 2.3. 도메인 용어 정의
 
+- 텔러관리 도메인: 텔러(Teller)
+	- 직원텔러 (Employee Teller)
+		- 권한 (Permission)
+	- 자동텔러 (Auto Teller)
+		- 금고 (Vault)
+		- 현찰 (Cash)
+			- 자동 텔러: 현찰 이동 (Auto Teller: Cash Movement)
+	- 보증 (Certification)
+		- 서명용 개인키 (Private Key), 공개키 (Public Key), 비대칭키 (Assymetric Key)
+		- 무효화 (Invalidate)
+	- 은행 금고 (Bank Vault)
+- 일일마감 도메인: 일일마감 (Daily Closing)
+	- 마감 상태 (Closed status)
+	- 하루의 거래 (Daily Transactions)
+	- 대차대조 (Reconciliation)
+	- 오차 (Discrepancy)
+	- 레포트 (Report)
 - 회원관리 도메인: 회원(Member)
 	- 가입(Register)
 	- 탈퇴(Withdraw)
@@ -91,22 +116,28 @@
 	- 개설(Open)
 	- 폐쇄(Close)
 	- 조회(Lookup)
-		- 잔고~ (Balance~)
-		- 보류잔고 (Pending Balance~)
-		- 거래기록~ (AccountHistory~)
+		- 잔고 (Balance)
+		- 보류잔고 (Pending Balance)
+		- 거래기록 (Account History)
 	- 실행(Execute)
 	- 입금(Deposit)
 	- 출금(Withdraw)
 	- 송금(Transfer)
-		- 고액~ (Large~)
-		- 보류 (Pending)
-		- 즉시 (Immediate)
+		- 의심스러운 송금 (Suspicious Transfer) -> 지연 처리 (Delayed Execute)
+			- 고액 송금 (Large Transfer)
+			- 잦은 송금 (Frequent Transfer)
+			- 신규계좌로 송금 (To New Account Transfer)
+			- 장기간 미사용 계좌로 송금 (Inactive Account Transfer)
+		- 처리(Execute)
+			- 지연 (Delay)
+				- 승인 (Accept)
+				- 거부 (Reject)
+			- 완료 (Complete)
 - 모니터링 도메인 (Monitoring)
-	- 모니터링 관리자 (Monitoring Admin)
-	- 시스템 이벤트 (System Event)
-	- 고액송금 (" = 계좌관리 도메인)
-		- 승인(Approve)
-		- 거부(Reject)
+	- 모니터링: 회원 (Monitoring: Member)
+	- 모니터링: 계좌 (Monitoring: Account)
+	- 모니터링: 텔러 (Monitoring: Teller)
+	- 모니터링: 지연 송금 (Monitoring: Delayed Transfer)
 
 ## 3. 시스템 디자인
 
