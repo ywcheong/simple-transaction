@@ -2,11 +2,18 @@ package com.ywcheong.simple.transaction.security.jwt
 
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.UnsupportedJwtException
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.*
 
 // DTO representing the JWT payload
-data class JwtPayloadDto(
-    val sub: String, val name: String, val role: String
+data class JwtTokenContents(
+    val sub: String,
+    val exp: Date,
+    val authorities: List<SimpleGrantedAuthority>,
 )
 
 // Service for signing and verifying JWTs using asymmetric keys
@@ -14,29 +21,31 @@ data class JwtPayloadDto(
 class JwtService(
     private val jwtKeyProvider: JwtKeyProvider // Inject the key provider
 ) {
-    // Create a compact JWT from JwtPayloadDto
-    fun sign(payload: JwtPayloadDto): String {
-        return Jwts.builder().claim("name", payload.name).claim("role", payload.role).subject(payload.sub)
-            .signWith(jwtKeyProvider.privateKey) // Use private key for signing
-            .compact()
-    }
+    fun oneDayAfterNow(): Date = Date.from(Instant.now().plus(1, ChronoUnit.DAYS))
 
-    // Parse a compact JWT string to JwtPayloadDto, or return null if invalid
-    fun parse(token: String): JwtPayloadDto? {
-        return try {
-            val claims = Jwts.parser().verifyWith(jwtKeyProvider.publicKey) // Use public key for verification
-                .build().parseSignedClaims(token).payload
+    fun sign(sub: String, authorities: List<SimpleGrantedAuthority>): String =
+        Jwts.builder().subject(sub).expiration(oneDayAfterNow()).claim("authorities", authorities.map { it.authority })
+            .signWith(jwtKeyProvider.privateKey).compact()
 
-            val sub = claims.subject ?: return null
-            val name = claims["name"] as? String ?: return null
-            val role = claims["role"] as? String ?: return null
+    fun parseAuthorities(authClaim: Any?): List<SimpleGrantedAuthority>? =
+        (authClaim as? List<*>)?.map { SimpleGrantedAuthority(it as? String) }
 
-            JwtPayloadDto(sub, name, role)
-        } catch (e: JwtException) {
-            null // Signature invalid or token malformed
-        } catch (e: Exception) {
-            null // Claims missing or wrong type
-        }
+    fun parse(token: String): JwtTokenContents? {
+        val claims = try {
+            Jwts.parser().verifyWith(jwtKeyProvider.publicKey).build().parseSignedClaims(token).payload
+        } catch (ex: IllegalArgumentException) {
+            null
+        } catch (ex: UnsupportedJwtException) {
+            null
+        } catch (ex: JwtException) {
+            null
+        } ?: return null
+
+        val sub = claims.subject ?: return null
+        val exp = claims.expiration ?: return null
+        val authorities = parseAuthorities(claims["authorities"]) ?: return null
+
+        return JwtTokenContents(sub, exp, authorities)
     }
 }
 

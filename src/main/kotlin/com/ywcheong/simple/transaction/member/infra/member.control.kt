@@ -2,11 +2,11 @@ package com.ywcheong.simple.transaction.member.infra
 
 import com.ywcheong.simple.transaction.common.service.PrincipalService
 import com.ywcheong.simple.transaction.member.domain.*
-import com.ywcheong.simple.transaction.security.jwt.JwtPayloadDto
 import com.ywcheong.simple.transaction.security.jwt.JwtService
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.web.bind.annotation.*
 
 data class RegisterRequest(val id: String, val name: String, val password: String, val phone: String)
@@ -79,11 +79,7 @@ class MemberController(
         val member = memberRepository.findById(memberId) ?: throw MemberLoginException()
         val storedHashedPassword = member.password
         if (!memberPasswordHashService.isEqual(claimedPlainPassword, storedHashedPassword)) throw MemberLoginException()
-        val jwtToken = jwtService.sign(
-            JwtPayloadDto(
-                sub = member.id.value, name = member.name.value, role = "ROLE_USER"
-            )
-        )
+        val jwtToken = jwtService.sign(member.id.value, listOf(SimpleGrantedAuthority("ROLE_USER")))
 
         // 응답 반환
         ResponseEntity.status(HttpStatus.OK).body(TokenResponse(jwtToken))
