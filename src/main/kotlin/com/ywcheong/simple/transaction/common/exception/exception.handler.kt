@@ -1,6 +1,7 @@
 package com.ywcheong.simple.transaction.common.exception
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.security.authorization.AuthorizationDeniedException
@@ -13,14 +14,16 @@ import java.net.URI
 val logger_ = KotlinLogging.logger { }
 
 @RestControllerAdvice
-class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
+class GlobalExceptionHandler(
+    @param:Value("\${springdoc.swagger-ui.path}") private val documentPath: String,
+) : ResponseEntityExceptionHandler() {
 
     /* 4xx : 도메인 규칙 위반, 사용자의 실수 */
     @ExceptionHandler(UserFaultException::class)
     fun handleUserFault(ex: UserFaultException, request: WebRequest): ProblemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.message ?: "Bad request").apply {
             title = "User error"
-            type = URI("/help/ui")
+            type = URI(documentPath)
             instance = URI(request.getDescription(false).removePrefix("uri="))
         }
 
@@ -29,7 +32,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     fun handleMethodAuthorizationDenied(ex: AuthorizationDeniedException, request: WebRequest): ProblemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.message ?: "Forbidden").apply {
             title = "Forbidden"
-            type = URI("/help/ui")
+            type = URI(documentPath)
             instance = URI(request.getDescription(false).removePrefix("uri="))
         }
 
@@ -41,7 +44,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"
         ).apply {
             title = "Internal Server Error"
-            type = URI("/help/ui")
+            type = URI(documentPath)
             instance = URI(request.getDescription(false).removePrefix("uri="))
         }
     }
