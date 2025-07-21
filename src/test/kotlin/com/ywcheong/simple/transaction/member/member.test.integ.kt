@@ -147,7 +147,7 @@ class MemberIntegrationTest @Autowired constructor(
         val response = withdraw(tamperedToken)
 
         // Assert
-        assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+        assertEquals(HttpStatus.UNAUTHORIZED, response.statusCode)
     }
 
     @Test
@@ -156,6 +156,6 @@ class MemberIntegrationTest @Autowired constructor(
         val response = withdrawNoParseNoAuth()
 
         // Assert
-        assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+        assertEquals(HttpStatus.UNAUTHORIZED, response.statusCode)
     }
 }
