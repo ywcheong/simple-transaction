@@ -141,7 +141,7 @@ class MemberIntegrationTest @Autowired constructor(
         // Arrange
         register()
         val originalToken = issueToken().body!!.token
-        val tamperedToken = originalToken.dropLast(1) + "x" // 토큰 일부 변조
+        val tamperedToken = originalToken + "tampered" // 토큰 일부 변조
 
         // Act
         val response = withdraw(tamperedToken)
