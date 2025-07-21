@@ -43,9 +43,7 @@ interface MemberControllerSpec {
             responseCode = "200",
             description = "탈퇴 성공",
             content = [Content(schema = Schema(implementation = WithdrawResponse::class))]
-        ), ApiResponse(responseCode = "400", description = "이미 탈퇴된 계정", content = [Content()]), ApiResponse(
-            responseCode = "403", description = "인증 실패", content = [Content()]
-        )]
+        ), ApiResponse(responseCode = "400", description = "이미 탈퇴된 계정", content = [Content()])]
     )
     fun withdrawExistingMember(): ResponseEntity<WithdrawResponse>
 
