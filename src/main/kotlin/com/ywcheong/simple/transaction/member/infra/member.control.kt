@@ -46,7 +46,7 @@ class MemberController(
             )
             try {
                 memberRepository.insert(member)
-            } catch (ex: DuplicateKeyException) {
+            } catch (_: DuplicateKeyException) {
                 throw DuplicateMemberIdException()
             }
 

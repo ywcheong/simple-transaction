@@ -33,11 +33,11 @@ class JwtService(
     fun parse(token: String): JwtTokenContents? {
         val claims = try {
             Jwts.parser().verifyWith(jwtKeyProvider.publicKey).build().parseSignedClaims(token).payload
-        } catch (ex: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             null
-        } catch (ex: UnsupportedJwtException) {
+        } catch (_: UnsupportedJwtException) {
             null
-        } catch (ex: JwtException) {
+        } catch (_: JwtException) {
             null
         } ?: return null
 
