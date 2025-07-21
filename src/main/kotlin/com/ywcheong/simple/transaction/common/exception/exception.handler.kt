@@ -3,6 +3,7 @@ package com.ywcheong.simple.transaction.common.exception
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
@@ -19,7 +20,16 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     fun handleUserFault(ex: UserFaultException, request: WebRequest): ProblemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.message ?: "Bad request").apply {
             title = "User error"
-            type = URI("about:blank")
+            type = URI("/help/ui")
+            instance = URI(request.getDescription(false).removePrefix("uri="))
+        }
+
+    /* 403 : 권한 없는 엔드포인트로 접근 */
+    @ExceptionHandler(AuthorizationDeniedException::class)
+    fun handleMethodAuthorizationDenied(ex: AuthorizationDeniedException, request: WebRequest): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.message ?: "Forbidden").apply {
+            title = "Forbidden"
+            type = URI("/help/ui")
             instance = URI(request.getDescription(false).removePrefix("uri="))
         }
 
@@ -31,6 +41,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"
         ).apply {
             title = "Internal Server Error"
+            type = URI("/help/ui")
             instance = URI(request.getDescription(false).removePrefix("uri="))
         }
     }
