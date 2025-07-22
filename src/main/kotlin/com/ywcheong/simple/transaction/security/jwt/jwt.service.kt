@@ -14,7 +14,9 @@ data class JwtTokenContents(
     val sub: String,
     val exp: Date,
     val authorities: List<SimpleGrantedAuthority>,
-)
+) {
+    fun isExpiredAt(date: Date): Boolean = date >= exp
+}
 
 // Service for signing and verifying JWTs using asymmetric keys
 @Component
