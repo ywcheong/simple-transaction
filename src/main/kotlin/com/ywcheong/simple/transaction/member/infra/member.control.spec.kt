@@ -38,7 +38,7 @@ interface MemberControllerSpec {
     @Operation(
         summary = "회원 탈퇴",
         description = "현재 인증된 사용자가 회원 탈퇴를 요청합니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         responses = [ApiResponse(
             responseCode = "200",
             description = "탈퇴 성공",

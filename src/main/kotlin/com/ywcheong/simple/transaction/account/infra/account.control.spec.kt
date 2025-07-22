@@ -19,7 +19,7 @@ interface AccountControllerSpec {
     @Operation(
         summary = "계좌 목록 조회",
         description = "현재 인증된 사용자가 소유한 모든 계좌의 ID 목록을 반환합니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         responses = [ApiResponse(
             responseCode = "200",
             description = "조회 성공",
@@ -31,7 +31,7 @@ interface AccountControllerSpec {
     @Operation(
         summary = "계좌 상세 조회",
         description = "계좌 ID로 단일 계좌의 잔액과 보류 잔액을 조회합니다. 본인 소유 계좌만 조회 가능합니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         parameters = [Parameter(name = "id", description = "계좌 ID (UUID4)", required = true, `in` = ParameterIn.PATH)],
         responses = [ApiResponse(
             responseCode = "200",
@@ -44,7 +44,7 @@ interface AccountControllerSpec {
     @Operation(
         summary = "계좌 개설",
         description = "새로운 계좌를 개설합니다. 반환값으로 개설된 계좌 ID를 제공합니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         responses = [ApiResponse(
             responseCode = "200",
             description = "개설 성공",
@@ -56,7 +56,7 @@ interface AccountControllerSpec {
     @Operation(
         summary = "계좌 폐쇄",
         description = "계좌를 폐쇄(비활성화)합니다. 잔고가 0이어야만 폐쇄 가능합니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         parameters = [Parameter(name = "id", description = "계좌 ID (UUID4)", required = true, `in` = ParameterIn.PATH)],
         responses = [ApiResponse(responseCode = "200", description = "폐쇄 성공", content = [Content()]), ApiResponse(
             responseCode = "400", description = "잔고가 남아 있거나 권한 없음", content = [Content()]
@@ -67,7 +67,7 @@ interface AccountControllerSpec {
     @Operation(
         summary = "계좌 입금",
         description = "지정한 계좌에 금액을 입금합니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         parameters = [Parameter(name = "id", description = "계좌 ID (UUID4)", required = true, `in` = ParameterIn.PATH)],
         requestBody = io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true, content = [Content(
@@ -91,7 +91,7 @@ interface AccountControllerSpec {
     @Operation(
         summary = "계좌 출금",
         description = "지정한 계좌에서 금액을 출금합니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         parameters = [Parameter(name = "id", description = "계좌 ID (UUID4)", required = true, `in` = ParameterIn.PATH)],
         requestBody = io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true, content = [Content(
@@ -118,7 +118,7 @@ interface TransferControllerSpec {
     @Operation(
         summary = "계좌 송금",
         description = "계좌 간 송금을 실행합니다. 고액 송금(타인에게 100만원 이상)은 대기 상태가 됩니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         requestBody = io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true, content = [Content(
                 mediaType = "application/json",
@@ -155,7 +155,7 @@ interface TransferControllerSpec {
     @Operation(
         summary = "송금 처리 상태 확인",
         description = "송금 이벤트 ID로 송금의 처리 상태(대기/완료/거부)를 조회합니다.",
-        security = [SecurityRequirement(name = "bearer-key")],
+        security = [SecurityRequirement(name = "authed-member")],
         parameters = [Parameter(
             name = "id", description = "송금 이벤트 ID (UUID4)", required = true, `in` = ParameterIn.PATH
         )],
