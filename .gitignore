@@ -1,7 +1,6 @@
 HELP.md
 .gradle
 build/
-secret/
 docker/volume/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
