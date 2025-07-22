@@ -138,8 +138,7 @@ class DefaultAccountEventOutboxRepository(
     private val dao: AccountEventDao
 ) : AccountEventOutboxRepository {
     override fun findNotPublished(): List<AccountEvent> = dao.findNotPublished().map { it.toAccountEvent() }
-    override fun markAsPublished(events: List<AccountEvent>) {
-        val now = Date()
-        dao.updateBatch(events.map { AccountEventEntity(it, now) })
+    override fun markAsPublished(events: List<AccountEvent>, publishedAt: Date) {
+        dao.updateBatch(events.map { AccountEventEntity(it, publishedAt) })
     }
 }

@@ -1,11 +1,11 @@
 package com.ywcheong.simple.transaction.security.jwt
 
+import com.ywcheong.simple.transaction.common.service.TimeService
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.UnsupportedJwtException
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
-import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 
@@ -19,9 +19,9 @@ data class JwtTokenContents(
 // Service for signing and verifying JWTs using asymmetric keys
 @Component
 class JwtService(
-    private val jwtKeyProvider: JwtKeyProvider // Inject the key provider
+    private val jwtKeyProvider: JwtKeyProvider, private val timeService: TimeService
 ) {
-    fun oneDayAfterNow(): Date = Date.from(Instant.now().plus(1, ChronoUnit.DAYS))
+    fun oneDayAfterNow(): Date = Date.from(timeService.nowInstant().plus(1, ChronoUnit.DAYS))
 
     fun sign(sub: String, authorities: List<SimpleGrantedAuthority>): String =
         Jwts.builder().subject(sub).expiration(oneDayAfterNow()).claim("authorities", authorities.map { it.authority })

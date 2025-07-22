@@ -2,11 +2,11 @@ package com.ywcheong.simple.transaction.account.infra
 
 import com.ywcheong.simple.transaction.account.domain.*
 import com.ywcheong.simple.transaction.common.service.PrincipalService
+import com.ywcheong.simple.transaction.common.service.TimeService
 import com.ywcheong.simple.transaction.common.service.TransactionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 data class DepositRequest(val amount: Long)
 data class WithdrawRequest(val amount: Long)
@@ -22,6 +22,7 @@ data class OpenAccountResponse(val accountId: String)
 class AccountController(
     private val principalService: PrincipalService,
     private val transactionService: TransactionService,
+    private val timeService: TimeService,
     private val accountRepository: AccountRepository,
     private val eventRepository: AccountEventRepository
 ) : AccountControllerSpec {
@@ -111,7 +112,11 @@ class AccountController(
             accountRepository.update(updatedAccount)
 
             val event = AccountDepositedEvent(
-                id = eventId, issuedAt = Date(), issuedBy = account.owner, account = accountId, amount = depositChange
+                id = eventId,
+                issuedAt = timeService.nowDate(),
+                issuedBy = account.owner,
+                account = accountId,
+                amount = depositChange
             )
 
             eventRepository.insert(event)
@@ -146,7 +151,11 @@ class AccountController(
             accountRepository.update(updatedAccount)
 
             val event = AccountWithdrewEvent(
-                id = eventId, issuedAt = Date(), issuedBy = account.owner, account = accountId, amount = withdrawChange
+                id = eventId,
+                issuedAt = timeService.nowDate(),
+                issuedBy = account.owner,
+                account = accountId,
+                amount = withdrawChange
             )
 
             eventRepository.insert(event)
@@ -177,6 +186,7 @@ data class CheckTransferResponse(val isPending: Boolean, val isAccepted: Boolean
 @RestController
 @RequestMapping("/transfers")
 class TransferController(
+    private val timeService: TimeService,
     private val principalService: PrincipalService,
     private val transactionService: TransactionService,
     private val accountRepository: AccountRepository,
@@ -236,7 +246,7 @@ class TransferController(
     private fun saveImmediateTransfer(result: TransferResult.Complete): AccountEventId = with(result) {
         val event = AccountTransferAcceptedEvent(
             id = AccountEventId.createUnique(),
-            issuedAt = Date(),
+            issuedAt = timeService.nowDate(),
             issuedBy = fromAccount.owner,
             accountFrom = fromAccount.id,
             accountTo = toAccount.id,
@@ -253,7 +263,7 @@ class TransferController(
     private fun savePendingTransfer(result: TransferResult.Pending): AccountEventId = with(result) {
         val event = AccountTransferAttemptEvent(
             id = AccountEventId.createUnique(),
-            issuedAt = Date(),
+            issuedAt = timeService.nowDate(),
             issuedBy = fromAccount.owner,
             accountFrom = fromAccount.id,
             accountTo = toAccount.id,
