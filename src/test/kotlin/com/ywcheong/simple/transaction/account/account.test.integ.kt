@@ -411,6 +411,19 @@ class AccountIntegrationTest @Autowired constructor(
         // B2: 1,000,000 (즉시)
         assertEquals(1_000_000, balanceB2.body!!.balance)
     }
+
+    @Test
+    fun `존재하지 않는 계좌를 삭제할 수 없다`() {
+        val tokenA = registerAndLogin(userAId, userAName, userAPassword, userAPhone)
+        val fakeAccountId = "00000000-0000-4000-8000-000000000000"
+        val response = rest.exchange(
+            "/accounts/$fakeAccountId",
+            HttpMethod.DELETE,
+            HttpEntity<Void>(HttpHeaders().apply { setBearerAuth(tokenA) }),
+            String::class.java
+        )
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+    }
 }
 
 data class DepositRequest(val amount: Long)
