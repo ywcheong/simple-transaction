@@ -3,9 +3,12 @@ package com.ywcheong.simple.transaction.account.domain
 import com.ywcheong.simple.transaction.member.domain.MemberId
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import java.util.*
 import kotlin.test.assertEquals
 
+@Execution(ExecutionMode.CONCURRENT)
 class AccountIdTest {
     @Test
     fun `올바른 형식의 계좌번호는 생성된다`() {

@@ -3,11 +3,11 @@ package com.ywcheong.simple.transaction.certification
 import com.ywcheong.simple.transaction.certification.domain.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.assertEquals
 
-/**
- * Certification 도메인 단위 테스트
- */
+@Execution(ExecutionMode.CONCURRENT)
 class CertificationTest {
 
     private val certificationService = CertificationService()

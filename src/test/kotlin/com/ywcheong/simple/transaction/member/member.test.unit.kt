@@ -4,8 +4,11 @@ import com.ywcheong.simple.transaction.common.exception.UserFaultException
 import com.ywcheong.simple.transaction.member.domain.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.assertEquals
 
+@Execution(ExecutionMode.CONCURRENT)
 class MemberIdTest {
     @Test
     fun `최소 길이의 회원 id는 생성된다`() {
