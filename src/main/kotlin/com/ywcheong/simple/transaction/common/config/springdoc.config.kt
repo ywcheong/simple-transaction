@@ -14,4 +14,12 @@ import org.springframework.context.annotation.Configuration
     `in` = SecuritySchemeIn.HEADER,
     description = "`/members/tokens` 엔드포인트에서 로그인 후 발급받은 토큰을 입력하세요. 이 토큰은 HTTP 요청 과정에서 `Authorization: Bearer {{token}}`으로 첨부됩니다."
 )
+@SecurityScheme(
+    name = "authed-teller-admin",
+    type = SecuritySchemeType.HTTP,
+    scheme = "bearer",
+    bearerFormat = "JWT",
+    `in` = SecuritySchemeIn.HEADER,
+    description = "해당 JWT는 시스템 관리자만이 획득할 수 있으며 비공개입니다. 이 토큰은 HTTP 요청 과정에서 `Authorization: Bearer {{token}}`으로 첨부됩니다."
+)
 class OpenApiConfig

@@ -15,7 +15,7 @@ class AccountOutboxService(
     private val kafkaTemplate: KafkaTemplate<String, AccountEvent>,
     @param:Value("\${st.kafka-topic}") private val kafkaTopicName: String
 ) {
-    @Scheduled(fixedRate = 2000)
+    // @Scheduled(fixedRate = 2000)
     fun publishEvent() {
         // TODO 멱등성 보장이 없는 코드 개선
         val waitingEvents = outboxRepository.findNotPublished()

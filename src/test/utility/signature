@@ -1,0 +1,33 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+trap cleanup EXIT
+cleanup() {
+  rm -f "${keyfile:-}" "${msgfile:-}" "${sigfile:-}"
+}
+
+if [ $# -lt 2 ]; then
+  echo "Usage: $0 {base64_privkey} message..." >&2
+  exit 1
+fi
+
+key_b64="$1"
+shift
+message="$*"
+
+keyfile=$(mktemp)
+msgfile=$(mktemp)
+sigfile=$(mktemp)
+
+# Decode private key (PKCS#8 DER)
+echo "$key_b64" | base64 -d > "$keyfile"
+
+# Write message exactly as arguments
+printf "%s" "$message" > "$msgfile"
+
+# Sign message with openssl
+openssl dgst -sha256 -sign "$keyfile" -keyform DER -out "$sigfile" "$msgfile"
+
+# Output: base64(signature):original message
+signature=$(base64 < "$sigfile" | tr -d '\n')
+printf '%s:%s\n' "$signature" "$message"
